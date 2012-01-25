@@ -41,19 +41,19 @@ static struct param *select_param(struct darray *params)
 {
     unsigned i, r, cap = 0;
     struct param *tmp;
-    
+
     for (i = 0; i < params->length; ++i) {
         darray_at(params, (void **)&tmp, i);
         cap += tmp->weight;
     }
-    
+
     r = mtrandom() * cap;
-    
+
     while (r < cap) {
         darray_at(params, (void **)&tmp, --i);
         cap -= tmp->weight;
     }
-    
+
     return tmp;
 }
 
@@ -61,13 +61,13 @@ int mgenerator_open(struct mgenerator *mgen)
 {
     mgen->nodes = malloc(sizeof *mgen->nodes);
     mgen->params = malloc(sizeof *mgen->params);
-    
+
     if (!mgen->nodes || !mgen->params) {
         free(mgen->nodes);
         free(mgen->params);
         return -1;
     }
-    
+
     if (darray_open(mgen->nodes, 3) == -1) {
         free(mgen->nodes);
         free(mgen->params);
@@ -79,7 +79,7 @@ int mgenerator_open(struct mgenerator *mgen)
         free(mgen->params);
         return -1;
     }
-    
+
     return 0;
 }
 
@@ -99,32 +99,33 @@ int mgenerator_add_param(struct mgenerator *mgen, int (*create) (int *, int, int
     struct param *p = malloc(sizeof *p);
     if (!p)
         return -1;
-    
+
     p->create = create;
     p->weight = weight;
-    
+
     if (darray_push_back(mgen->params, (void *)p) == -1) {
         free(p);
         return -1;
     }
-    
+
     return 0;
 }
 
 int mgenerator_generate(struct mgenerator *mgen, int *map, int w, int h)
 {
-    unsigned r, p;
+    unsigned r, p, successes = 0;
     struct param *selected;
-    
+
     while (mgen->nodes->length) {
         r = mtrandom() * mgen->nodes->length;
         darray_at(mgen->nodes, (void **)&p, r);
         darray_remove(mgen->nodes, NULL, r);
-        
+
         selected = select_param(mgen->params);
-        selected->create(map, w, h, X(p), Y(p));
+        if (selected->create(map, w, h, X(p), Y(p)) == 0)
+            successes++;
     }
-    
-    return 0;
+
+    return successes;
 }
 
