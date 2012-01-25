@@ -28,7 +28,7 @@
 #include "mgenerator.h"
 #include "random.h"
 
-#define MAKE_POINT(x, y) ((x) << 16 | (y))
+#define MAKE_POINT(x, y) ((long)(x) << 16 | (y))
 #define X(p) ((p) >> 16 & 0xffff)
 #define Y(p) ((p) & 0xffff)
 

@@ -200,8 +200,8 @@ int create_hall_5x1(int *map, int w, int h, int x, int y)
         if (line(map, w, h, sx, sy, ex, ey) == 0) {
             if (IN_BOUNDS(x + nodes[r * 2][0], y + nodes[r * 2][1], MWIDTH, MHEIGHT))
                 mgenerator_add_node(&mgen, x + nodes[r * 2][0], y + nodes[r * 2][1]);
-            /*if (IN_BOUNDS(x + nodes[r * 2 + 1][0], y + nodes[r * 2 + 1][1], MWIDTH, MHEIGHT))
-                mgenerator_add_node(&mgen, x + nodes[r * 2 + 1][0], y + nodes[r * 2 + 1][1]);*/
+            if (IN_BOUNDS(x + nodes[r * 2 + 1][0], y + nodes[r * 2 + 1][1], MWIDTH, MHEIGHT))
+                mgenerator_add_node(&mgen, x + nodes[r * 2 + 1][0], y + nodes[r * 2 + 1][1]);
             return 0;
         }
     }
@@ -209,48 +209,39 @@ int create_hall_5x1(int *map, int w, int h, int x, int y)
     return -1;
 }
 
-int create_hall_10x1(int *map, int w, int h, int x, int y)
+int create_room_10x10(int *map, int w, int h, int x, int y)
 {
-    int ends[4][2] = {
-        {-10,   0},
-        { 10,   0},
-        {  0, -10},
-        {  0,  10}
-    };
-    int tried[4] = {0, 0, 0, 0};
-    int nodes[8][2] = {
-        {-11,   0},
-        {  1,   0},
-        { 11,   0},
-        { -1,   0},
-        {  0, -11},
-        {  0,   1},
-        {  0,  11},
-        {  0,  -1}
-    };
-    int sx, sy, ex, ey, i, r;
+    int rw = mtrandom() * 5 + 6;
+    int rh = mtrandom() * 5 + 6;
+    int rw2 = rw / 2;
+    int rh2 = rh / 2;
+    int ix, iy;
 
-    sx = x;
-    sy = y;
-
-    i = 4;
-    while (i --> 0) {
-        r = mtrandom() * 4;
-        while (tried[r])
-            r = mtrandom() * 4;
-        tried[r] = 1;
-
-        ex = x + ends[r][0];
-        ey = y + ends[r][1];
-
-        if (line(map, w, h, sx, sy, ex, ey) == 0) {
-            if (IN_BOUNDS(x + nodes[r * 2][0], y + nodes[r * 2][1], MWIDTH, MHEIGHT))
-                mgenerator_add_node(&mgen, x + nodes[r * 2][0], y + nodes[r * 2][1]);
-            if (IN_BOUNDS(x + nodes[r * 2 + 1][0], y + nodes[r * 2 + 1][1], MWIDTH, MHEIGHT))
-                mgenerator_add_node(&mgen, x + nodes[r * 2 + 1][0], y + nodes[r * 2 + 1][1]);
-            break;
+    for (ix = x - rw2 - 1; ix <= x + rw2 + 1; ++ix) {
+        for (iy = y - rh2 - 1; iy <= y + rh2 + 1; ++iy) {
+            if (!IN_BOUNDS(ix, iy, w, h))
+                return -1;
+            if (!map[iy * w + ix] && (iy != y && ix != x))
+                return -1;
         }
     }
+
+    for (ix = x - rw2; ix <= x + rw2; ++ix) {
+        for (iy = y - rh2; iy <= y + rh2; ++iy) {
+            if (IN_BOUNDS(ix, iy, w, h))
+                map[iy * w + ix] = 0;
+        }
+    }
+
+
+    if (IN_BOUNDS(x - rw2, y, MWIDTH, MHEIGHT))
+        mgenerator_add_node(&mgen, x - rw2 - 1, y);
+    /*if (IN_BOUNDS(x, y - rh2, MWIDTH, MHEIGHT))
+        mgenerator_add_node(&mgen, x, y - rh2);*/
+    if (IN_BOUNDS(x + rw2, y, MWIDTH, MHEIGHT))
+        mgenerator_add_node(&mgen, x + rw2 + 1, y);
+    /*if (IN_BOUNDS(x, y + rh2, MWIDTH, MHEIGHT))
+        mgenerator_add_node(&mgen, x, y + rh2);*/
 
     return 0;
 }
@@ -267,11 +258,11 @@ int main(int argc, char *argv[])
 
     mtseed(time(NULL));
     mgenerator_open(&mgen);
-    mgenerator_add_param(&mgen, create_hall_5x1, 3);
-    mgenerator_add_param(&mgen, create_hall_10x1, 1);
+    mgenerator_add_param(&mgen, create_hall_5x1, 2);
+    mgenerator_add_param(&mgen, create_room_10x10, 1);
 
     mgenerator_add_node(&mgen, mtrandom() * MWIDTH, mtrandom() * MHEIGHT);
-    while (mgenerator_generate(&mgen, (int *)map, MWIDTH, MHEIGHT) < 10) {
+    while (mgenerator_generate(&mgen, (int *)map, MWIDTH, MHEIGHT) < 30) {
         for (x = 0; x < MWIDTH; ++x)
             for (y = 0; y < MHEIGHT; ++y)
                 map[y][x] = 1;
