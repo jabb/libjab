@@ -117,7 +117,7 @@ main()
 }
 #endif
 
-unsigned seed(unsigned s)
+unsigned mtseed(unsigned s)
 {
     static unsigned sd = 0;
     if (s == 0) {
@@ -128,7 +128,7 @@ unsigned seed(unsigned s)
     return sd;
 }
 
-double random(void)
+double mtrandom(void)
 {
     return genrand() / (0xffffffff * 0.99999999);
 }

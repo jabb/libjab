@@ -23,15 +23,25 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef RANDOM_H
-#define RANDOM_H
+#ifndef MGENERATOR_H
+#define MGENERATOR_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-unsigned mtseed(unsigned s);
-double mtrandom(void);
+struct darray;
+
+struct mgenerator {
+    struct darray *nodes;
+    struct darray *params;
+};
+
+int mgenerator_open(struct mgenerator *mgen);
+void mgenerator_close(struct mgenerator *mgen);
+int mgenerator_add_node(struct mgenerator *mgen, int x, int y);
+int mgenerator_add_param(struct mgenerator *mgen, int (*create) (int *, int, int, int, int), int weight);
+int mgenerator_generate(struct mgenerator *mgen, int *map, int w, int h);
 
 #ifdef __cplusplus
 }
