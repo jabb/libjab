@@ -62,21 +62,21 @@ static void output_tile(int x, int y, int tile, int flags)
     case TPLAYER:
         tile = AT_AUX_SYM_HUMAN;
         if (flags)
-            color = 0x111111;
+            color = 0x222222;
         else
             color = 0xff0000;
         break;
     case TFLOOR:
         tile = AT_AUX_SYM_FLOOR;
         if (flags)
-            color = 0x111111;
+            color = 0x222222;
         else
             color = 0x777777;
         break;
     case TWALL:
         tile = AT_AUX_SYM_WALL;
         if (flags)
-            color = 0x111111;
+            color = 0x222222;
         else
             color = 0x773300;
         break;
@@ -126,7 +126,7 @@ void output(void)
 
     for (y = 0; y < MHEIGHT; ++y) {
         for (x = 0; x < MWIDTH; ++x) {
-            if (1) { /*(can_see(px, py, x, y, 8, (int *)map, MWIDTH)) {*/
+            if (can_see(px, py, x, y, 8, (int *)map, MWIDTH)) {
                 seen_map[y][x] = 1;
                 output_tile(x, y, map[y][x] ? TWALL : TFLOOR, 0);
             }
@@ -141,6 +141,12 @@ void output(void)
 
 int line(int *map, int w, int h, int x0, int y0, int x1, int y1)
 {
+    int neighbors[4][2] = {
+        {-1,  0},
+        { 1,  0},
+        { 0, -1},
+        { 0,  1},
+    };
     int i;
     int path[128][2];
 
@@ -290,5 +296,3 @@ int main(int argc, char *argv[])
     at_close();
     return 0;
 }
-
-

@@ -113,7 +113,8 @@ int mgenerator_add_param(struct mgenerator *mgen, int (*create) (int *, int, int
 
 int mgenerator_generate(struct mgenerator *mgen, int *map, int w, int h)
 {
-    unsigned r, p, successes = 0;
+    const unsigned MAX_PARAM_TRIES = 10;
+    unsigned r, p, i, successes = 0;
     struct param *selected;
 
     while (mgen->nodes->length) {
@@ -121,9 +122,13 @@ int mgenerator_generate(struct mgenerator *mgen, int *map, int w, int h)
         darray_at(mgen->nodes, (void **)&p, r);
         darray_remove(mgen->nodes, NULL, r);
 
-        selected = select_param(mgen->params);
-        if (selected->create(map, w, h, X(p), Y(p)) == 0)
-            successes++;
+        for (i = 0; i < MAX_PARAM_TRIES; ++i) {
+            selected = select_param(mgen->params);
+            if (selected->create(map, w, h, X(p), Y(p)) == 0) {
+                successes++;
+                break;
+            }
+        }
     }
 
     return successes;
