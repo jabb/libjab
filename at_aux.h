@@ -35,7 +35,6 @@ extern "C" {
 
 enum {
     AT_AUX_SYM_HUMAN,
-    AT_AUX_SYM_HUMAN_WEAPON,
     AT_AUX_SYM_SPRUCE,
     AT_AUX_SYM_ELM,
     AT_AUX_SYM_BUSH,

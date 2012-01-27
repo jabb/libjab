@@ -44,6 +44,7 @@ enum {
     TFLOOR,
     TWALL,
     TCHEST,
+    TTABLE,
     TMAX
 };
 
@@ -62,10 +63,11 @@ struct world {
 };
 
 struct tile tiles[TMAX] = {
-    {AT_AUX_SYM_HUMAN_WEAPON, 0xff0000, 0},
+    {AT_AUX_SYM_HUMAN, 0xff0000, 0},
     {AT_AUX_SYM_FLOOR, 0x777777, 0},
     {AT_AUX_SYM_WALL, 0x773300, 1},
     {AT_AUX_SYM_CHEST, 0x776600, 0},
+    {AT_AUX_SYM_TABLE, 0x774400, 0},
 };
 
 static void output_tile(int x, int y, int tile, int flags);
@@ -387,6 +389,22 @@ int room_XxX(struct mgenerator *mgen, int *map, int w, int h, int x, int y, int 
     for (ix = x - size2; ix <= x + size2; ++ix)
         for (iy = y - size2; iy <= y + size2; ++iy)
             map[iy * w + ix] = TFLOOR;
+
+    if (mtrandom() * 100 < 40) {
+        map[(y - size2) * w + (x - size2)] = TTABLE;
+    }
+    
+    if (mtrandom() * 100 < 40) {
+        map[(y - size2) * w + (x + size2)] = TTABLE;
+    }
+    
+    if (mtrandom() * 100 < 40) {
+        map[(y + size2) * w + (x - size2)] = TTABLE;
+    }
+    
+    if (mtrandom() * 100 < 40) {
+        map[(y + size2) * w + (x + size2)] = TTABLE;
+    }
 
     mgenerator_add_node(mgen, x, y + size2p1);
     mgenerator_add_node(mgen, x, y - size2p1);
