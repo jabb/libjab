@@ -39,61 +39,45 @@
 #define IN_BOUNDS(x, y, w, h) ((x) >= 0 && (x) < (w) && (y) >= 0 && y < (h))
 
 int seen_map[MHEIGHT][MWIDTH] = {{0}};
+int obs_map[MHEIGHT][MWIDTH] = {{0}};
 int map[MHEIGHT][MWIDTH] = {{0}};
 
 int px = 0, py = 0;
 
+struct tile {
+    int symbol;
+    int color;
+    int obstructed;
+};
+
 enum {
     TPLAYER,
     TFLOOR,
-    TWALL
+    TWALL,
+    TMAX
+};
+
+struct tile tiles[TMAX] = {
+    {AT_AUX_SYM_HUMAN_WEAPON, 0xff0000, 0},
+    {AT_AUX_SYM_FLOOR, 0x777777, 0},
+    {AT_AUX_SYM_WALL, 0x773300, 1},
 };
 
 static void output_tile(int x, int y, int tile, int flags)
 {
-    int color;
-
     at_set_font((unsigned *)at_aux_sym, AT_AUX_FWIDTH, AT_AUX_FHEIGHT);
 
     x *= AT_AUX_FWIDTH;
     y *= AT_AUX_FHEIGHT;
 
-    switch (tile) {
-    case TPLAYER:
-        tile = AT_AUX_SYM_HUMAN_WEAPON;
-        if (flags)
-            color = 0x222222;
-        else
-            color = 0xff0000;
-        break;
-    case TFLOOR:
-        tile = AT_AUX_SYM_FLOOR;
-        if (flags)
-            color = 0x222222;
-        else
-            color = 0x777777;
-        break;
-    case TWALL:
-        tile = AT_AUX_SYM_WALL;
-        if (flags)
-            color = 0x222222;
-        else
-            color = 0x773300;
-        break;
-    default:
-        tile = 0;
-        color = 0;
-        break;
-    }
-
-    at_plot_glyph(x, y, tile, color);
+    at_plot_glyph(x, y, tiles[tile].symbol, flags ? 0x222222 : tiles[tile].color);
 
     at_set_font(NULL, 0, 0);
 }
 
 void pmove(int dx, int dy)
 {
-    if (IN_BOUNDS(px + dx, py + dy, MWIDTH, MHEIGHT) && !map[py + dy][px + dx]) {
+    if (IN_BOUNDS(px + dx, py + dy, MWIDTH, MHEIGHT) && !tiles[map[py + dy][px + dx]].obstructed) {
         px += dx;
         py += dy;
     }
@@ -123,15 +107,14 @@ void output(void)
 {
     int x, y;
 
-
     for (y = 0; y < MHEIGHT; ++y) {
         for (x = 0; x < MWIDTH; ++x) {
-            if (can_see(px, py, x, y, 8, (int *)map, MWIDTH)) {
+            if (can_see(px, py, x, y, 8, (int *)obs_map, MWIDTH)) {
                 seen_map[y][x] = 1;
-                output_tile(x, y, map[y][x] ? TWALL : TFLOOR, 0);
+                output_tile(x, y, map[y][x], 0);
             }
             else if (seen_map[y][x]) {
-                output_tile(x, y, map[y][x] ? TWALL : TFLOOR, 1);
+                output_tile(x, y, map[y][x], 1);
             }
         }
     }
@@ -144,19 +127,19 @@ int create_left_hall_5(struct mgenerator *mgen, int *map, int w, int h, int x, i
     int ix;
 
     for (ix = x; ix < x + 5; ++ix) {
-        if (!IN_BOUNDS(ix, y, w, h) || !map[y * w + ix])
+        if (!IN_BOUNDS(ix, y, w, h) || !tiles[map[y * w + ix]].obstructed)
             return -1;
 
         if (ix > x && ix + 1 < x + 5) {
-            if (!IN_BOUNDS(ix, y + 1, w, h) || !map[(y + 1) * w + ix])
+            if (!IN_BOUNDS(ix, y + 1, w, h) || !tiles[map[(y + 1) * w + ix]].obstructed)
                 return -1;
-            if (!IN_BOUNDS(ix, y - 1, w, h) || !map[(y - 1) * w + ix])
+            if (!IN_BOUNDS(ix, y - 1, w, h) || !tiles[map[(y - 1) * w + ix]].obstructed)
                 return -1;
         }
     }
 
     for (ix = x; ix < x + 5; ++ix)
-        map[y * w + ix] = 0;
+        map[y * w + ix] = TFLOOR;
 
     mgenerator_add_node(mgen, x - 1, y);
     mgenerator_add_node(mgen, x + 5, y);
@@ -171,19 +154,19 @@ int create_right_hall_5(struct mgenerator *mgen, int *map, int w, int h, int x, 
     int ix;
 
     for (ix = x; ix > x - 5; --ix) {
-        if (!IN_BOUNDS(ix, y, w, h) || !map[y * w + ix])
+        if (!IN_BOUNDS(ix, y, w, h) || !tiles[map[y * w + ix]].obstructed)
             return -1;
 
         if (ix < x && ix - 1 > x - 5) {
-            if (!IN_BOUNDS(ix, y + 1, w, h) || !map[(y + 1) * w + ix])
+            if (!IN_BOUNDS(ix, y + 1, w, h) || !tiles[map[(y + 1) * w + ix]].obstructed)
                 return -1;
-            if (!IN_BOUNDS(ix, y - 1, w, h) || !map[(y - 1) * w + ix])
+            if (!IN_BOUNDS(ix, y - 1, w, h) || !tiles[map[(y - 1) * w + ix]].obstructed)
                 return -1;
         }
     }
 
     for (ix = x; ix > x - 5; --ix)
-        map[y * w + ix] = 0;
+        map[y * w + ix] = TFLOOR;
 
     mgenerator_add_node(mgen, x - 5, y);
     mgenerator_add_node(mgen, x + 1, y);
@@ -198,19 +181,19 @@ int create_up_hall_5(struct mgenerator *mgen, int *map, int w, int h, int x, int
     int iy;
 
     for (iy = y; iy > y - 5; --iy) {
-        if (!IN_BOUNDS(x, iy, w, h) || !map[iy * w + x])
+        if (!IN_BOUNDS(x, iy, w, h) || !tiles[map[iy * w + x]].obstructed)
             return -1;
 
         if (iy < y && iy - 1 > y - 5) {
-            if (!IN_BOUNDS(x + 1, iy, w, h) || !map[iy * w + (x + 1)])
+            if (!IN_BOUNDS(x + 1, iy, w, h) || !tiles[map[iy * w + (x + 1)]].obstructed)
                 return -1;
-            if (!IN_BOUNDS(x - 1, iy, w, h) || !map[iy * w + (x - 1)])
+            if (!IN_BOUNDS(x - 1, iy, w, h) || !tiles[map[iy * w + (x - 1)]].obstructed)
                 return -1;
         }
     }
 
     for (iy = y; iy > y - 5; --iy)
-        map[iy * w + x] = 0;
+        map[iy * w + x] = TFLOOR;
 
     mgenerator_add_node(mgen, x, y - 5);
     mgenerator_add_node(mgen, x, y + 1);
@@ -225,19 +208,19 @@ int create_down_hall_5(struct mgenerator *mgen, int *map, int w, int h, int x, i
     int iy;
 
     for (iy = y; iy < y + 5; ++iy) {
-        if (!IN_BOUNDS(x, iy, w, h) || !map[iy * w + x])
+        if (!IN_BOUNDS(x, iy, w, h) || !tiles[map[iy * w + x]].obstructed)
             return -1;
 
         if (iy > y && iy + 1 < y + 5) {
-            if (!IN_BOUNDS(x + 1, iy, w, h) || !map[iy * w + (x + 1)])
+            if (!IN_BOUNDS(x + 1, iy, w, h) || !tiles[map[iy * w + (x + 1)]].obstructed)
                 return -1;
-            if (!IN_BOUNDS(x - 1, iy, w, h) || !map[iy * w + (x - 1)])
+            if (!IN_BOUNDS(x - 1, iy, w, h) || !tiles[map[iy * w + (x - 1)]].obstructed)
                 return -1;
         }
     }
 
     for (iy = y; iy < y + 5; ++iy)
-        map[iy * w + x] = 0;
+        map[iy * w + x] = TFLOOR;
 
     mgenerator_add_node(mgen, x, y + 5);
     mgenerator_add_node(mgen, x, y - 1);
@@ -255,19 +238,44 @@ int create_room_7x7(struct mgenerator *mgen, int *map, int w, int h, int x, int 
         for (iy = y - 4; iy <= y + 4; ++iy) {
             if (ix == x || iy == y)
                 continue;
-            if (!IN_BOUNDS(ix, iy, w, h) || !map[iy * w + ix])
+            if (!IN_BOUNDS(ix, iy, w, h) || !tiles[map[iy * w + ix]].obstructed)
                 return -1;
         }
     }
 
     for (ix = x - 3; ix <= x + 3; ++ix)
         for (iy = y - 3; iy <= y + 3; ++iy)
-            map[iy * w + ix] = 0;
+            map[iy * w + ix] = TFLOOR;
 
     mgenerator_add_node(mgen, x, y + 4);
     mgenerator_add_node(mgen, x, y - 4);
     mgenerator_add_node(mgen, x + 4, y);
     mgenerator_add_node(mgen, x - 4, y);
+
+    return 0;
+}
+
+int create_room_5x5(struct mgenerator *mgen, int *map, int w, int h, int x, int y)
+{
+    int ix, iy;
+
+    for (ix = x - 3; ix <= x + 3; ++ix) {
+        for (iy = y - 3; iy <= y + 3; ++iy) {
+            if (ix == x || iy == y)
+                continue;
+            if (!IN_BOUNDS(ix, iy, w, h) || !tiles[map[iy * w + ix]].obstructed)
+                return -1;
+        }
+    }
+
+    for (ix = x - 2; ix <= x + 2; ++ix)
+        for (iy = y - 2; iy <= y + 2; ++iy)
+            map[iy * w + ix] = TFLOOR;
+
+    mgenerator_add_node(mgen, x, y + 3);
+    mgenerator_add_node(mgen, x, y - 3);
+    mgenerator_add_node(mgen, x + 3, y);
+    mgenerator_add_node(mgen, x - 3, y);
 
     return 0;
 }
@@ -280,14 +288,14 @@ int create_room_3x3(struct mgenerator *mgen, int *map, int w, int h, int x, int 
         for (iy = y - 2; iy <= y + 2; ++iy) {
             if (ix == x || iy == y)
                 continue;
-            if (!IN_BOUNDS(ix, iy, w, h) || !map[iy * w + ix])
+            if (!IN_BOUNDS(ix, iy, w, h) || !tiles[map[iy * w + ix]].obstructed)
                 return -1;
         }
     }
 
     for (ix = x - 1; ix <= x + 1; ++ix)
         for (iy = y - 1; iy <= y + 1; ++iy)
-            map[iy * w + ix] = 0;
+            map[iy * w + ix] = TFLOOR;
 
     mgenerator_add_node(mgen, x, y + 2);
     mgenerator_add_node(mgen, x, y - 2);
@@ -304,7 +312,7 @@ int create_room_1x1(struct mgenerator *mgen, int *map, int w, int h, int x, int 
     for (ix = x; ix <= x; ++ix)
         for (iy = y; iy <= y; ++iy)
             if (IN_BOUNDS(ix, iy, w, h))
-                map[iy * w + ix] = 0;
+                map[iy * w + ix] = TFLOOR;
 
     mgenerator_add_node(mgen, x + mtrandom() * 3 - 1, y + mtrandom() * 3 - 1);
 
@@ -320,7 +328,7 @@ int main(int argc, char *argv[])
 
     for (x = 0; x < MWIDTH; ++x)
         for (y = 0; y < MHEIGHT; ++y)
-            map[y][x] = 1;
+            map[y][x] = TWALL;
 
     mtseed(time(NULL));
     mgenerator_open(&mgen);
@@ -329,6 +337,7 @@ int main(int argc, char *argv[])
     mgenerator_add_plan(&mgen, create_up_hall_5, 4);
     mgenerator_add_plan(&mgen, create_down_hall_5, 4);
     mgenerator_add_plan(&mgen, create_room_7x7, 32);
+    mgenerator_add_plan(&mgen, create_room_5x5, 16);
     mgenerator_add_plan(&mgen, create_room_3x3, 8);
     mgenerator_add_plan(&mgen, create_room_1x1, 1);
 
@@ -337,8 +346,12 @@ int main(int argc, char *argv[])
 
     for (x = 0; x < MWIDTH; ++x)
         for (y = 0; y < MHEIGHT; ++y)
-            if (!map[y][x])
+            if (!tiles[map[y][x]].obstructed)
                 px = x, py = y;
+
+    for (x = 0; x < MWIDTH; ++x)
+        for (y = 0; y < MHEIGHT; ++y)
+            obs_map[y][x] = tiles[map[y][x]].obstructed;
 
     at_open(MWIDTH * AT_FWIDTH, MHEIGHT * AT_FHEIGHT, "at", 2, 2);
 
@@ -348,15 +361,19 @@ int main(int argc, char *argv[])
         if (at_peek('g')) {
             for (x = 0; x < MWIDTH; ++x)
                 for (y = 0; y < MHEIGHT; ++y) {
-                    map[y][x] = 1;
+                    map[y][x] = TWALL;
                     seen_map[y][x] = 0;
+                    obs_map[y][x] = 0;
                 }
             mgenerator_add_node(&mgen, mtrandom() * MWIDTH, mtrandom() * MHEIGHT);
             mgenerator_generate(&mgen, (int *)map, MWIDTH, MHEIGHT, 0x7fffffff);
             for (x = 0; x < MWIDTH; ++x)
                 for (y = 0; y < MHEIGHT; ++y)
-                    if (!map[y][x])
+                    if (!tiles[map[y][x]].obstructed)
                         px = x, py = y;
+            for (x = 0; x < MWIDTH; ++x)
+                for (y = 0; y < MHEIGHT; ++y)
+                    obs_map[y][x] = tiles[map[y][x]].obstructed;
         }
         if (at_peek('s')) {
             for (x = 0; x < MWIDTH; ++x)
