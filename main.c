@@ -43,6 +43,7 @@ enum {
     TPLAYER,
     TFLOOR,
     TWALL,
+    TCHEST,
     TMAX
 };
 
@@ -64,6 +65,7 @@ struct tile tiles[TMAX] = {
     {AT_AUX_SYM_HUMAN_WEAPON, 0xff0000, 0},
     {AT_AUX_SYM_FLOOR, 0x777777, 0},
     {AT_AUX_SYM_WALL, 0x773300, 1},
+    {AT_AUX_SYM_CHEST, 0x776600, 0},
 };
 
 static void output_tile(int x, int y, int tile, int flags);
@@ -72,6 +74,7 @@ static void player_move(struct world *w, int dx, int dy);
 static void clear_world(struct world *w, int tile);
 static void generate_obstructed_map(struct world *w);
 static void find_open_location(struct world *w, int *x, int *y);
+static void border_map(struct world *w, int tile);
 
 static void input(struct world *w);
 static void output(struct world *w);
@@ -86,6 +89,7 @@ int room_7x7(struct mgenerator *mgen, int *map, int w, int h, int x, int y);
 int room_5x5(struct mgenerator *mgen, int *map, int w, int h, int x, int y);
 int room_3x3(struct mgenerator *mgen, int *map, int w, int h, int x, int y);
 int room_1x1(struct mgenerator *mgen, int *map, int w, int h, int x, int y);
+int treasure_3x3(struct mgenerator *mgen, int *map, int w, int h, int x, int y);
 
 int main(int argc, char *argv[])
 {
@@ -105,12 +109,14 @@ int main(int argc, char *argv[])
     mgenerator_add_plan(&mgen, down_hall_5, 4);
     mgenerator_add_plan(&mgen, room_7x7, 32);
     mgenerator_add_plan(&mgen, room_5x5, 16);
-    mgenerator_add_plan(&mgen, room_3x3, 8);
+    mgenerator_add_plan(&mgen, room_3x3, 4);
     mgenerator_add_plan(&mgen, room_1x1, 1);
+    mgenerator_add_plan(&mgen, treasure_3x3, 4);
 
     mgenerator_add_node(&mgen, mtrandom() * MWIDTH, mtrandom() * MHEIGHT);
     mgenerator_generate(&mgen, (int *)world.map, MWIDTH, MHEIGHT, 0x7fffffff);
 
+    border_map(&world, TWALL);
     find_open_location(&world, &world.px, &world.py);
     generate_obstructed_map(&world);
 
@@ -125,6 +131,7 @@ int main(int argc, char *argv[])
             mgenerator_add_node(&mgen, mtrandom() * MWIDTH, mtrandom() * MHEIGHT);
             mgenerator_generate(&mgen, (int *)world.map, MWIDTH, MHEIGHT, 0x7fffffff);
             
+            border_map(&world, TWALL);
             find_open_location(&world, &world.px, &world.py);
             generate_obstructed_map(&world);
         }
@@ -200,6 +207,21 @@ static void find_open_location(struct world *w, int *x, int *y)
     }
 }
 
+static void border_map(struct world *w, int tile)
+{
+    int x, y;
+    
+    for (x = 0; x < MWIDTH; ++x) {
+        w->map[0][x] = tile;
+        w->map[MHEIGHT - 1][x] = tile;
+    }
+    
+    for (y = 0; y < MHEIGHT; ++y) {
+        w->map[y][0] = tile;
+        w->map[y][MWIDTH - 1] = tile;
+    }
+}
+
 static void input(struct world *w)
 {
     if (at_peek('h'))
@@ -244,15 +266,13 @@ int left_hall_5(struct mgenerator *mgen, int *map, int w, int h, int x, int y)
     int ix;
 
     for (ix = x; ix < x + 5; ++ix) {
-        if (!IN_BOUNDS(ix, y, w, h) || !tiles[map[y * w + ix]].obstructed)
+        if (!IN_BOUNDS(ix, y, w, h) || map[y * w + ix] != TWALL)
             return -1;
 
         if (ix > x && ix + 1 < x + 5) {
-            if (!IN_BOUNDS(ix, y + 1, w, h) ||
-                !tiles[map[(y + 1) * w + ix]].obstructed)
+            if (!IN_BOUNDS(ix, y + 1, w, h) || map[(y + 1) * w + ix] != TWALL)
                 return -1;
-            if (!IN_BOUNDS(ix, y - 1, w, h) ||
-                !tiles[map[(y - 1) * w + ix]].obstructed)
+            if (!IN_BOUNDS(ix, y - 1, w, h) || map[(y - 1) * w + ix] != TWALL)
                 return -1;
         }
     }
@@ -273,15 +293,13 @@ int right_hall_5(struct mgenerator *mgen, int *map, int w, int h, int x, int y)
     int ix;
 
     for (ix = x; ix > x - 5; --ix) {
-        if (!IN_BOUNDS(ix, y, w, h) || !tiles[map[y * w + ix]].obstructed)
+        if (!IN_BOUNDS(ix, y, w, h) || map[y * w + ix] != TWALL)
             return -1;
 
         if (ix < x && ix - 1 > x - 5) {
-            if (!IN_BOUNDS(ix, y + 1, w, h) ||
-                !tiles[map[(y + 1) * w + ix]].obstructed)
+            if (!IN_BOUNDS(ix, y + 1, w, h) || map[(y + 1) * w + ix] != TWALL)
                 return -1;
-            if (!IN_BOUNDS(ix, y - 1, w, h) ||
-                !tiles[map[(y - 1) * w + ix]].obstructed)
+            if (!IN_BOUNDS(ix, y - 1, w, h) || map[(y - 1) * w + ix] != TWALL)
                 return -1;
         }
     }
@@ -302,15 +320,13 @@ int up_hall_5(struct mgenerator *mgen, int *map, int w, int h, int x, int y)
     int iy;
 
     for (iy = y; iy > y - 5; --iy) {
-        if (!IN_BOUNDS(x, iy, w, h) || !tiles[map[iy * w + x]].obstructed)
+        if (!IN_BOUNDS(x, iy, w, h) || map[iy * w + x]  != TWALL)
             return -1;
 
         if (iy < y && iy - 1 > y - 5) {
-            if (!IN_BOUNDS(x + 1, iy, w, h) ||
-                !tiles[map[iy * w + (x + 1)]].obstructed)
+            if (!IN_BOUNDS(x + 1, iy, w, h) || map[iy * w + (x + 1)] != TWALL)
                 return -1;
-            if (!IN_BOUNDS(x - 1, iy, w, h) ||
-                !tiles[map[iy * w + (x - 1)]].obstructed)
+            if (!IN_BOUNDS(x - 1, iy, w, h) || map[iy * w + (x - 1)] != TWALL)
                 return -1;
         }
     }
@@ -331,15 +347,13 @@ int down_hall_5(struct mgenerator *mgen, int *map, int w, int h, int x, int y)
     int iy;
 
     for (iy = y; iy < y + 5; ++iy) {
-        if (!IN_BOUNDS(x, iy, w, h) || !tiles[map[iy * w + x]].obstructed)
+        if (!IN_BOUNDS(x, iy, w, h) || map[iy * w + x] != TWALL)
             return -1;
 
         if (iy > y && iy + 1 < y + 5) {
-            if (!IN_BOUNDS(x + 1, iy, w, h) ||
-                !tiles[map[iy * w + (x + 1)]].obstructed)
+            if (!IN_BOUNDS(x + 1, iy, w, h) || map[iy * w + (x + 1)]  != TWALL)
                 return -1;
-            if (!IN_BOUNDS(x - 1, iy, w, h) ||
-                !tiles[map[iy * w + (x - 1)]].obstructed)
+            if (!IN_BOUNDS(x - 1, iy, w, h) || map[iy * w + (x - 1)] != TWALL)
                 return -1;
         }
     }
@@ -365,7 +379,7 @@ int room_XxX(struct mgenerator *mgen, int *map, int w, int h, int x, int y, int 
         for (iy = y - size2p1; iy <= y + size2p1; ++iy) {
             if (ix == x || iy == y)
                 continue;
-            if (!IN_BOUNDS(ix, iy, w, h) || !tiles[map[iy * w + ix]].obstructed)
+            if (!IN_BOUNDS(ix, iy, w, h) || map[iy * w + ix] != TWALL)
                 return -1;
         }
     }
@@ -399,14 +413,25 @@ int room_3x3(struct mgenerator *mgen, int *map, int w, int h, int x, int y)
 
 int room_1x1(struct mgenerator *mgen, int *map, int w, int h, int x, int y)
 {
-    int ix, iy;
-
-    for (ix = x; ix <= x; ++ix)
-        for (iy = y; iy <= y; ++iy)
-            if (IN_BOUNDS(ix, iy, w, h))
-                map[iy * w + ix] = TFLOOR;
+    if (IN_BOUNDS(x, y, w, h) && map[y * w + x] == TWALL)
+        map[y * w + x] = TFLOOR;
+    else
+        return -1;
 
     mgenerator_add_node(mgen, x + mtrandom() * 3 - 1, y + mtrandom() * 3 - 1);
 
+    return 0;
+}
+
+int treasure_3x3(struct mgenerator *mgen, int *map, int w, int h, int x, int y)
+{
+    if (room_XxX(mgen, map, w, h, x, y, 3) == -1)
+        return -1;
+
+    map[(y - 1) * w + (x - 1)] = TCHEST;
+    map[(y - 1) * w + (x + 1)] = TCHEST;
+    map[(y + 1) * w + (x - 1)] = TCHEST;
+    map[(y + 1) * w + (x + 1)] = TCHEST;
+    
     return 0;
 }
