@@ -87,6 +87,8 @@ void mgenerator_close(struct mgenerator *mgen)
 {
     darray_close(mgen->nodes, free);
     darray_close(mgen->plans, free);
+    free(mgen->nodes);
+    free(mgen->plans);
 }
 
 int mgenerator_add_node(struct mgenerator *mgen, int x, int y)
@@ -132,7 +134,6 @@ int mgenerator_generate(struct mgenerator *mgen, int *map, int w, int h)
     while (mgen->nodes->length) {
         r = mtrandom() * mgen->nodes->length;
         darray_at(mgen->nodes, (void **)&p, r);
-        darray_remove(mgen->nodes, NULL, r);
 
         for (i = 0; i < MAX_plan_TRIES; ++i) {
             selected = select_plan(mgen->plans);
@@ -141,6 +142,8 @@ int mgenerator_generate(struct mgenerator *mgen, int *map, int w, int h)
                 break;
             }
         }
+
+        darray_remove(mgen->nodes, free, r);
     }
 
     return successes;

@@ -276,7 +276,7 @@ int main(int argc, char *argv[])
                 break;
             }
 
-    at_open(MWIDTH * AT_FWIDTH, MHEIGHT * AT_FHEIGHT, "at", 3, 3);
+    /*at_open(MWIDTH * AT_FWIDTH, MHEIGHT * AT_FHEIGHT, "at", 3, 3);
 
     while (at_flush()) {
         if (at_peek('Q'))
@@ -285,8 +285,8 @@ int main(int argc, char *argv[])
         at_clear(0);
         output();
     }
-
+*/
     mgenerator_close(&mgen);
-    at_close();
+    /*at_close();*/
     return 0;
 }
