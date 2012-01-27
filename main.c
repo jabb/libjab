@@ -332,6 +332,19 @@ int main(int argc, char *argv[])
     while (at_flush()) {
         if (at_peek('Q'))
             break;
+        if (at_peek('g')) {
+            for (x = 0; x < MWIDTH; ++x)
+                for (y = 0; y < MHEIGHT; ++y)
+                    map[y][x] = 1;
+            mgenerator_add_node(&mgen, mtrandom() * MWIDTH, mtrandom() * MHEIGHT);
+            mgenerator_generate(&mgen, (int *)map, MWIDTH, MHEIGHT);
+            for (x = 0; x < MWIDTH; ++x)
+                for (y = 0; y < MHEIGHT; ++y)
+                    if (!map[y][x]) {
+                        px = x, py = y;
+                        break;
+                    }
+        }
         input();
         at_clear(0);
         output();
