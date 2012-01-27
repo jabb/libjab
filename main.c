@@ -126,7 +126,7 @@ void output(void)
 
     for (y = 0; y < MHEIGHT; ++y) {
         for (x = 0; x < MWIDTH; ++x) {
-            if (1) {/*(can_see(px, py, x, y, 8, (int *)map, MWIDTH)) {*/
+            if (can_see(px, py, x, y, 8, (int *)map, MWIDTH)) {
                 seen_map[y][x] = 1;
                 output_tile(x, y, map[y][x] ? TWALL : TFLOOR, 0);
             }
@@ -322,10 +322,8 @@ int main(int argc, char *argv[])
 
     for (x = 0; x < MWIDTH; ++x)
         for (y = 0; y < MHEIGHT; ++y)
-            if (!map[y][x]) {
+            if (!map[y][x])
                 px = x, py = y;
-                break;
-            }
 
     at_open(MWIDTH * AT_FWIDTH, MHEIGHT * AT_FHEIGHT, "at", 3, 3);
 
@@ -334,16 +332,16 @@ int main(int argc, char *argv[])
             break;
         if (at_peek('g')) {
             for (x = 0; x < MWIDTH; ++x)
-                for (y = 0; y < MHEIGHT; ++y)
+                for (y = 0; y < MHEIGHT; ++y) {
                     map[y][x] = 1;
+                    seen_map[y][x] = 0;
+                }
             mgenerator_add_node(&mgen, mtrandom() * MWIDTH, mtrandom() * MHEIGHT);
             mgenerator_generate(&mgen, (int *)map, MWIDTH, MHEIGHT);
             for (x = 0; x < MWIDTH; ++x)
                 for (y = 0; y < MHEIGHT; ++y)
-                    if (!map[y][x]) {
+                    if (!map[y][x])
                         px = x, py = y;
-                        break;
-                    }
         }
         input();
         at_clear(0);
