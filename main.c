@@ -139,9 +139,7 @@ void output(void)
     output_tile(px, py, TPLAYER, 0);
 }
 
-struct mgenerator mgen;
-
-int create_left_hall_5(int *map, int w, int h, int x, int y)
+int create_left_hall_5(struct mgenerator *mgen, int *map, int w, int h, int x, int y)
 {
     int ix;
 
@@ -160,15 +158,15 @@ int create_left_hall_5(int *map, int w, int h, int x, int y)
     for (ix = x; ix < x + 5; ++ix)
         map[y * w + ix] = 0;
 
-    mgenerator_add_node(&mgen, x - 1, y);
-    mgenerator_add_node(&mgen, x + 5, y);
-    mgenerator_add_node(&mgen, x + mtrandom() * 5, y - 1);
-    mgenerator_add_node(&mgen, x + mtrandom() * 5, y + 1);
+    mgenerator_add_node(mgen, x - 1, y);
+    mgenerator_add_node(mgen, x + 5, y);
+    mgenerator_add_node(mgen, x + mtrandom() * 5, y - 1);
+    mgenerator_add_node(mgen, x + mtrandom() * 5, y + 1);
 
     return 0;
 }
 
-int create_right_hall_5(int *map, int w, int h, int x, int y)
+int create_right_hall_5(struct mgenerator *mgen, int *map, int w, int h, int x, int y)
 {
     int ix;
 
@@ -187,15 +185,15 @@ int create_right_hall_5(int *map, int w, int h, int x, int y)
     for (ix = x; ix > x - 5; --ix)
         map[y * w + ix] = 0;
 
-    mgenerator_add_node(&mgen, x - 5, y);
-    mgenerator_add_node(&mgen, x + 1, y);
-    mgenerator_add_node(&mgen, x - mtrandom() * 5, y - 1);
-    mgenerator_add_node(&mgen, x - mtrandom() * 5, y + 1);
+    mgenerator_add_node(mgen, x - 5, y);
+    mgenerator_add_node(mgen, x + 1, y);
+    mgenerator_add_node(mgen, x - mtrandom() * 5, y - 1);
+    mgenerator_add_node(mgen, x - mtrandom() * 5, y + 1);
 
     return 0;
 }
 
-int create_up_hall_5(int *map, int w, int h, int x, int y)
+int create_up_hall_5(struct mgenerator *mgen, int *map, int w, int h, int x, int y)
 {
     int iy;
 
@@ -214,15 +212,15 @@ int create_up_hall_5(int *map, int w, int h, int x, int y)
     for (iy = y; iy > y - 5; --iy)
         map[iy * w + x] = 0;
 
-    mgenerator_add_node(&mgen, x, y - 5);
-    mgenerator_add_node(&mgen, x, y + 1);
-    mgenerator_add_node(&mgen, x + 1, y - mtrandom() * 5);
-    mgenerator_add_node(&mgen, x - 1, y - mtrandom() * 5);
+    mgenerator_add_node(mgen, x, y - 5);
+    mgenerator_add_node(mgen, x, y + 1);
+    mgenerator_add_node(mgen, x + 1, y - mtrandom() * 5);
+    mgenerator_add_node(mgen, x - 1, y - mtrandom() * 5);
 
     return 0;
 }
 
-int create_down_hall_5(int *map, int w, int h, int x, int y)
+int create_down_hall_5(struct mgenerator *mgen, int *map, int w, int h, int x, int y)
 {
     int iy;
 
@@ -241,76 +239,67 @@ int create_down_hall_5(int *map, int w, int h, int x, int y)
     for (iy = y; iy < y + 5; ++iy)
         map[iy * w + x] = 0;
 
-    mgenerator_add_node(&mgen, x, y + 5);
-    mgenerator_add_node(&mgen, x, y - 1);
-    mgenerator_add_node(&mgen, x + 1, y + mtrandom() * 5);
-    mgenerator_add_node(&mgen, x - 1, y + mtrandom() * 5);
+    mgenerator_add_node(mgen, x, y + 5);
+    mgenerator_add_node(mgen, x, y - 1);
+    mgenerator_add_node(mgen, x + 1, y + mtrandom() * 5);
+    mgenerator_add_node(mgen, x - 1, y + mtrandom() * 5);
 
     return 0;
 }
 
-int create_room_7x7(int *map, int w, int h, int x, int y)
+int create_room_7x7(struct mgenerator *mgen, int *map, int w, int h, int x, int y)
 {
     int ix, iy;
 
-
     for (ix = x - 3; ix <= x + 3; ++ix) {
         for (iy = y - 3; iy <= y + 3; ++iy) {
-            if (!IN_BOUNDS(ix, iy, w, h))
-                return -1;
             if (ix == x || iy == y)
                 continue;
-            if (!map[iy * w + ix])
+            if (!IN_BOUNDS(ix, iy, w, h) || !map[iy * w + ix])
                 return -1;
         }
     }
 
-    for (ix = x - 3; ix <= x + 3; ++ix) {
-        for (iy = y - 3; iy <= y + 3; ++iy) {
+    for (ix = x - 3; ix <= x + 3; ++ix)
+        for (iy = y - 3; iy <= y + 3; ++iy)
             map[iy * w + ix] = 0;
-        }
-    }
 
-    mgenerator_add_node(&mgen, x, y + 4);
-    mgenerator_add_node(&mgen, x, y - 4);
-    mgenerator_add_node(&mgen, x + 4, y);
-    mgenerator_add_node(&mgen, x - 4, y);
+    mgenerator_add_node(mgen, x, y + 4);
+    mgenerator_add_node(mgen, x, y - 4);
+    mgenerator_add_node(mgen, x + 4, y);
+    mgenerator_add_node(mgen, x - 4, y);
 
     return 0;
 }
 
-int create_room_3x3(int *map, int w, int h, int x, int y)
+int create_room_3x3(struct mgenerator *mgen, int *map, int w, int h, int x, int y)
 {
     int ix, iy;
-
 
     for (ix = x - 2; ix <= x + 2; ++ix) {
         for (iy = y - 2; iy <= y + 2; ++iy) {
-            if (!IN_BOUNDS(ix, iy, w, h))
-                return -1;
             if (ix == x || iy == y)
                 continue;
-            if (!map[iy * w + ix])
+            if (!IN_BOUNDS(ix, iy, w, h) || !map[iy * w + ix])
                 return -1;
         }
     }
 
-    for (ix = x - 1; ix <= x + 1; ++ix) {
-        for (iy = y - 1; iy <= y + 1; ++iy) {
+    for (ix = x - 1; ix <= x + 1; ++ix)
+        for (iy = y - 1; iy <= y + 1; ++iy)
             map[iy * w + ix] = 0;
-        }
-    }
 
-    mgenerator_add_node(&mgen, x, y + 2);
-    mgenerator_add_node(&mgen, x, y - 2);
-    mgenerator_add_node(&mgen, x + 2, y);
-    mgenerator_add_node(&mgen, x - 2, y);
+    mgenerator_add_node(mgen, x, y + 2);
+    mgenerator_add_node(mgen, x, y - 2);
+    mgenerator_add_node(mgen, x + 2, y);
+    mgenerator_add_node(mgen, x - 2, y);
 
     return 0;
 }
 
 int main(int argc, char *argv[])
 {
+    struct mgenerator mgen;
     unsigned x, y;
     (void)argc;
     (void)argv;

@@ -33,7 +33,7 @@ struct point {
 };
 
 struct plan {
-    int (*create) (int *, int, int, int, int);
+    mgenerator_plan *plan;
     int weight;
 };
 
@@ -107,13 +107,13 @@ int mgenerator_add_node(struct mgenerator *mgen, int x, int y)
     return 0;
 }
 
-int mgenerator_add_plan(struct mgenerator *mgen, int (*create) (int *, int, int, int, int), int weight)
+int mgenerator_add_plan(struct mgenerator *mgen, mgenerator_plan *plan, int weight)
 {
     struct plan *p = malloc(sizeof *p);
     if (!p)
         return -1;
 
-    p->create = create;
+    p->plan = plan;
     p->weight = weight;
 
     if (darray_push_back(mgen->plans, (void *)p) == -1) {
@@ -137,7 +137,7 @@ int mgenerator_generate(struct mgenerator *mgen, int *map, int w, int h)
 
         for (i = 0; i < MAX_plan_TRIES; ++i) {
             selected = select_plan(mgen->plans);
-            if (selected->create(map, w, h, p->x, p->y) == 0) {
+            if (selected->plan(mgen, map, w, h, p->x, p->y) == 0) {
                 successes++;
                 break;
             }
