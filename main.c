@@ -144,11 +144,11 @@ struct mgenerator mgen;
 int create_left_hall_5(int *map, int w, int h, int x, int y)
 {
     int ix;
-    
+
     for (ix = x; ix < x + 5; ++ix) {
         if (!IN_BOUNDS(ix, y, w, h) || !map[y * w + ix])
             return -1;
-        
+
         if (ix > x && ix + 1 < x + 5) {
             if (!IN_BOUNDS(ix, y + 1, w, h) || !map[(y + 1) * w + ix])
                 return -1;
@@ -156,10 +156,10 @@ int create_left_hall_5(int *map, int w, int h, int x, int y)
                 return -1;
         }
     }
-    
+
     for (ix = x; ix < x + 5; ++ix)
         map[y * w + ix] = 0;
-    
+
     mgenerator_add_node(&mgen, x - 1, y);
     mgenerator_add_node(&mgen, x + 5, y);
     mgenerator_add_node(&mgen, x + mtrandom() * 5, y - 1);
@@ -171,22 +171,22 @@ int create_left_hall_5(int *map, int w, int h, int x, int y)
 int create_right_hall_5(int *map, int w, int h, int x, int y)
 {
     int ix;
-    
+
     for (ix = x; ix > x - 5; --ix) {
         if (!IN_BOUNDS(ix, y, w, h) || !map[y * w + ix])
             return -1;
-        
-        if (ix > x && ix - 1 > x - 5) {
+
+        if (ix < x && ix - 1 > x - 5) {
             if (!IN_BOUNDS(ix, y + 1, w, h) || !map[(y + 1) * w + ix])
                 return -1;
             if (!IN_BOUNDS(ix, y - 1, w, h) || !map[(y - 1) * w + ix])
                 return -1;
         }
     }
-    
+
     for (ix = x; ix > x - 5; --ix)
         map[y * w + ix] = 0;
-    
+
     mgenerator_add_node(&mgen, x - 5, y);
     mgenerator_add_node(&mgen, x + 1, y);
     mgenerator_add_node(&mgen, x - mtrandom() * 5, y - 1);
@@ -198,11 +198,11 @@ int create_right_hall_5(int *map, int w, int h, int x, int y)
 int create_up_hall_5(int *map, int w, int h, int x, int y)
 {
     int iy;
-    
+
     for (iy = y; iy > y - 5; --iy) {
         if (!IN_BOUNDS(x, iy, w, h) || !map[iy * w + x])
             return -1;
-        
+
         if (iy > y && iy - 1 > y - 5) {
             if (!IN_BOUNDS(x, iy + 1, w, h) || !map[(iy + 1) * w + x])
                 return -1;
@@ -210,14 +210,41 @@ int create_up_hall_5(int *map, int w, int h, int x, int y)
                 return -1;
         }
     }
-    
+
     for (iy = y; iy > y - 5; --iy)
         map[iy * w + x] = 0;
-    
+
     mgenerator_add_node(&mgen, x, y - 5);
     mgenerator_add_node(&mgen, x, y + 1);
     mgenerator_add_node(&mgen, x + 1, y - mtrandom() * 5);
     mgenerator_add_node(&mgen, x - 1, y - mtrandom() * 5);
+
+    return 0;
+}
+
+int create_down_hall_5(int *map, int w, int h, int x, int y)
+{
+    int iy;
+
+    for (iy = y; iy < y + 5; ++iy) {
+        if (!IN_BOUNDS(x, iy, w, h) || !map[iy * w + x])
+            return -1;
+
+        if (iy > y && iy + 1 < y + 5) {
+            if (!IN_BOUNDS(x, iy + 1, w, h) || !map[(iy + 1) * w + x])
+                return -1;
+            if (!IN_BOUNDS(x, iy - 1, w, h) || !map[(iy - 1) * w + x])
+                return -1;
+        }
+    }
+
+    for (iy = y; iy < y + 5; ++iy)
+        map[iy * w + x] = 0;
+
+    mgenerator_add_node(&mgen, x, y + 5);
+    mgenerator_add_node(&mgen, x, y - 1);
+    mgenerator_add_node(&mgen, x + 1, y + mtrandom() * 5);
+    mgenerator_add_node(&mgen, x - 1, y + mtrandom() * 5);
 
     return 0;
 }
@@ -235,7 +262,9 @@ int main(int argc, char *argv[])
     mtseed(time(NULL));
     mgenerator_open(&mgen);
     mgenerator_add_param(&mgen, create_left_hall_5, 1);
+    mgenerator_add_param(&mgen, create_right_hall_5, 1);
     mgenerator_add_param(&mgen, create_up_hall_5, 1);
+    mgenerator_add_param(&mgen, create_down_hall_5, 1);
 
     x = mtrandom() * MWIDTH;
     y = mtrandom() * MHEIGHT;
@@ -248,7 +277,6 @@ int main(int argc, char *argv[])
         y = mtrandom() * MHEIGHT;
         mgenerator_add_node(&mgen, x, y);
     }
-    printf("Starting at: %d, %d\n", x, y);
 
     for (x = 0; x < MWIDTH; ++x)
         for (y = 0; y < MHEIGHT; ++y)
