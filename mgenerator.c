@@ -28,9 +28,9 @@
 #include "mgenerator.h"
 #include "random.h"
 
-#define MAKE_POINT(x, y) ((long)(x) << 16 | (y))
-#define X(p) ((p) >> 16 & 0xffff)
-#define Y(p) ((p) & 0xffff)
+struct point {
+    int x, y;
+};
 
 struct param {
     int (*create) (int *, int, int, int, int);
@@ -85,13 +85,24 @@ int mgenerator_open(struct mgenerator *mgen)
 
 void mgenerator_close(struct mgenerator *mgen)
 {
-    darray_close(mgen->nodes, NULL);
+    darray_close(mgen->nodes, free);
     darray_close(mgen->params, free);
 }
 
 int mgenerator_add_node(struct mgenerator *mgen, int x, int y)
 {
-    return darray_push_back(mgen->nodes, (void *)MAKE_POINT(x, y));
+    struct point *p = malloc(sizeof *p);
+    if (!p)
+        return -1;
+    p->x = x;
+    p->y = y;
+    
+    if (darray_push_back(mgen->nodes, (void *)p) == -1) {
+        free(p);
+        return -1;
+    }
+    
+    return 0;
 }
 
 int mgenerator_add_param(struct mgenerator *mgen, int (*create) (int *, int, int, int, int), int weight)
@@ -114,7 +125,8 @@ int mgenerator_add_param(struct mgenerator *mgen, int (*create) (int *, int, int
 int mgenerator_generate(struct mgenerator *mgen, int *map, int w, int h)
 {
     const unsigned MAX_PARAM_TRIES = 10;
-    unsigned r, p, i, successes = 0;
+    unsigned r, i, successes = 0;
+    struct point *p;
     struct param *selected;
 
     while (mgen->nodes->length) {
@@ -124,7 +136,7 @@ int mgenerator_generate(struct mgenerator *mgen, int *map, int w, int h)
 
         for (i = 0; i < MAX_PARAM_TRIES; ++i) {
             selected = select_param(mgen->params);
-            if (selected->create(map, w, h, X(p), Y(p)) == 0) {
+            if (selected->create(map, w, h, p->x, p->y) == 0) {
                 successes++;
                 break;
             }

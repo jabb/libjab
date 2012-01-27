@@ -139,115 +139,31 @@ void output(void)
     output_tile(px, py, TPLAYER, 0);
 }
 
-int line(int *map, int w, int h, int x0, int y0, int x1, int y1)
-{
-    int neighbors[4][2] = {
-        {-1,  0},
-        { 1,  0},
-        { 0, -1},
-        { 0,  1},
-    };
-    int i;
-    int path[128][2];
-
-    if (!IN_BOUNDS(x0, y0, w, h) || !IN_BOUNDS(x1, y1, w, h))
-        return -1;
-
-    path_to(x0, y0, x1, y1, (int *)path, 128);
-
-    for (i = 0; path[i][0] != -1; ++i) {
-        if (!map[path[i][1] * w + path[i][0]])
-            return -1;
-    }
-
-    for (i = 0; path[i][0] != -1; ++i) {
-        map[path[i][1] * w + path[i][0]] = 0;
-    }
-
-    return 0;
-}
-
 struct mgenerator mgen;
 
-int create_hall_5x1(int *map, int w, int h, int x, int y)
+int create_left_hall_5(int *map, int w, int h, int x, int y)
 {
-    int ends[4][2] = {
-        {-5,  0},
-        { 5,  0},
-        { 0, -5},
-        { 0,  5}
-    };
-    int tried[4] = {0, 0, 0, 0};
-    int nodes[8][2] = {
-        {-6,  0},
-        { 1,  0},
-        { 6,  0},
-        {-1,  0},
-        { 0, -6},
-        { 0,  1},
-        { 0,  6},
-        { 0, -1}
-    };
-    int sx, sy, ex, ey, i, r;
-
-    sx = x;
-    sy = y;
-
-    i = 4;
-    while (i --> 0) {
-        r = mtrandom() * 4;
-        while (tried[r])
-            r = mtrandom() * 4;
-        tried[r] = 1;
-
-        ex = x + ends[r][0];
-        ey = y + ends[r][1];
-
-        if (line(map, w, h, sx, sy, ex, ey) == 0) {
-            if (IN_BOUNDS(x + nodes[r * 2][0], y + nodes[r * 2][1], MWIDTH, MHEIGHT))
-                mgenerator_add_node(&mgen, x + nodes[r * 2][0], y + nodes[r * 2][1]);
-            if (IN_BOUNDS(x + nodes[r * 2 + 1][0], y + nodes[r * 2 + 1][1], MWIDTH, MHEIGHT))
-                mgenerator_add_node(&mgen, x + nodes[r * 2 + 1][0], y + nodes[r * 2 + 1][1]);
-            return 0;
-        }
-    }
-
-    return -1;
-}
-
-int create_room_10x10(int *map, int w, int h, int x, int y)
-{
-    int rw = mtrandom() * 5 + 6;
-    int rh = mtrandom() * 5 + 6;
-    int rw2 = rw / 2;
-    int rh2 = rh / 2;
-    int ix, iy;
-
-    for (ix = x - rw2 - 1; ix <= x + rw2 + 1; ++ix) {
-        for (iy = y - rh2 - 1; iy <= y + rh2 + 1; ++iy) {
-            if (!IN_BOUNDS(ix, iy, w, h))
+    int ix;
+    
+    for (ix = x; ix < x + 5; ++ix) {
+        if (!IN_BOUNDS(ix, y, w, h) || !map[y * w + ix])
+            return -1;
+        
+        if (ix > x && ix + 1 < x + 5) {
+            if (!IN_BOUNDS(ix, y + 1, w, h) || !map[(y + 1) * w + ix])
                 return -1;
-            if (!map[iy * w + ix] && (iy != y && ix != x))
+            if (!IN_BOUNDS(ix, y - 1, w, h) || !map[(y - 1) * w + ix])
                 return -1;
         }
     }
-
-    for (ix = x - rw2; ix <= x + rw2; ++ix) {
-        for (iy = y - rh2; iy <= y + rh2; ++iy) {
-            if (IN_BOUNDS(ix, iy, w, h))
-                map[iy * w + ix] = 0;
-        }
-    }
-
-
-    if (IN_BOUNDS(x - rw2, y, MWIDTH, MHEIGHT))
-        mgenerator_add_node(&mgen, x - rw2 - 1, y);
-    /*if (IN_BOUNDS(x, y - rh2, MWIDTH, MHEIGHT))
-        mgenerator_add_node(&mgen, x, y - rh2);*/
-    if (IN_BOUNDS(x + rw2, y, MWIDTH, MHEIGHT))
-        mgenerator_add_node(&mgen, x + rw2 + 1, y);
-    /*if (IN_BOUNDS(x, y + rh2, MWIDTH, MHEIGHT))
-        mgenerator_add_node(&mgen, x, y + rh2);*/
+    
+    for (ix = x; ix < x + 5; ++ix)
+        map[y * w + ix] = 0;
+    
+    mgenerator_add_node(&mgen, x - 1, y);
+    mgenerator_add_node(&mgen, x + 5, y);
+    mgenerator_add_node(&mgen, mtrandom() * 5, y - 1);
+    mgenerator_add_node(&mgen, mtrandom() * 5, y + 1);
 
     return 0;
 }
@@ -264,8 +180,7 @@ int main(int argc, char *argv[])
 
     mtseed(time(NULL));
     mgenerator_open(&mgen);
-    mgenerator_add_param(&mgen, create_hall_5x1, 2);
-    mgenerator_add_param(&mgen, create_room_10x10, 1);
+    mgenerator_add_param(&mgen, create_left_hall_5, 1);
 
     mgenerator_add_node(&mgen, mtrandom() * MWIDTH, mtrandom() * MHEIGHT);
     while (mgenerator_generate(&mgen, (int *)map, MWIDTH, MHEIGHT) < 30) {
