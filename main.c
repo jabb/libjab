@@ -76,6 +76,8 @@ static void find_open_location(struct world *w, int *x, int *y);
 static void input(struct world *w);
 static void output(struct world *w);
 
+int room_XxX(struct mgenerator *mgen, int *map, int w, int h, int x, int y, int size);
+
 int left_hall_5(struct mgenerator *mgen, int *map, int w, int h, int x, int y);
 int right_hall_5(struct mgenerator *mgen, int *map, int w, int h, int x, int y);
 int up_hall_5(struct mgenerator *mgen, int *map, int w, int h, int x, int y);
@@ -353,12 +355,14 @@ int down_hall_5(struct mgenerator *mgen, int *map, int w, int h, int x, int y)
     return 0;
 }
 
-int room_7x7(struct mgenerator *mgen, int *map, int w, int h, int x, int y)
+int room_XxX(struct mgenerator *mgen, int *map, int w, int h, int x, int y, int size)
 {
     int ix, iy;
+    int size2 = size / 2;
+    int size2p1 = size2 + 1;
 
-    for (ix = x - 4; ix <= x + 4; ++ix) {
-        for (iy = y - 4; iy <= y + 4; ++iy) {
+    for (ix = x - size2p1; ix <= x + size2p1; ++ix) {
+        for (iy = y - size2p1; iy <= y + size2p1; ++iy) {
             if (ix == x || iy == y)
                 continue;
             if (!IN_BOUNDS(ix, iy, w, h) || !tiles[map[iy * w + ix]].obstructed)
@@ -366,66 +370,31 @@ int room_7x7(struct mgenerator *mgen, int *map, int w, int h, int x, int y)
         }
     }
 
-    for (ix = x - 3; ix <= x + 3; ++ix)
-        for (iy = y - 3; iy <= y + 3; ++iy)
+    for (ix = x - size2; ix <= x + size2; ++ix)
+        for (iy = y - size2; iy <= y + size2; ++iy)
             map[iy * w + ix] = TFLOOR;
 
-    mgenerator_add_node(mgen, x, y + 4);
-    mgenerator_add_node(mgen, x, y - 4);
-    mgenerator_add_node(mgen, x + 4, y);
-    mgenerator_add_node(mgen, x - 4, y);
+    mgenerator_add_node(mgen, x, y + size2p1);
+    mgenerator_add_node(mgen, x, y - size2p1);
+    mgenerator_add_node(mgen, x + size2p1, y);
+    mgenerator_add_node(mgen, x - size2p1, y);
 
     return 0;
+}
+
+int room_7x7(struct mgenerator *mgen, int *map, int w, int h, int x, int y)
+{
+    return room_XxX(mgen, map, w, h, x, y, 7);
 }
 
 int room_5x5(struct mgenerator *mgen, int *map, int w, int h, int x, int y)
 {
-    int ix, iy;
-
-    for (ix = x - 3; ix <= x + 3; ++ix) {
-        for (iy = y - 3; iy <= y + 3; ++iy) {
-            if (ix == x || iy == y)
-                continue;
-            if (!IN_BOUNDS(ix, iy, w, h) || !tiles[map[iy * w + ix]].obstructed)
-                return -1;
-        }
-    }
-
-    for (ix = x - 2; ix <= x + 2; ++ix)
-        for (iy = y - 2; iy <= y + 2; ++iy)
-            map[iy * w + ix] = TFLOOR;
-
-    mgenerator_add_node(mgen, x, y + 3);
-    mgenerator_add_node(mgen, x, y - 3);
-    mgenerator_add_node(mgen, x + 3, y);
-    mgenerator_add_node(mgen, x - 3, y);
-
-    return 0;
+    return room_XxX(mgen, map, w, h, x, y, 5);
 }
 
 int room_3x3(struct mgenerator *mgen, int *map, int w, int h, int x, int y)
 {
-    int ix, iy;
-
-    for (ix = x - 2; ix <= x + 2; ++ix) {
-        for (iy = y - 2; iy <= y + 2; ++iy) {
-            if (ix == x || iy == y)
-                continue;
-            if (!IN_BOUNDS(ix, iy, w, h) || !tiles[map[iy * w + ix]].obstructed)
-                return -1;
-        }
-    }
-
-    for (ix = x - 1; ix <= x + 1; ++ix)
-        for (iy = y - 1; iy <= y + 1; ++iy)
-            map[iy * w + ix] = TFLOOR;
-
-    mgenerator_add_node(mgen, x, y + 2);
-    mgenerator_add_node(mgen, x, y - 2);
-    mgenerator_add_node(mgen, x + 2, y);
-    mgenerator_add_node(mgen, x - 2, y);
-
-    return 0;
+    return room_XxX(mgen, map, w, h, x, y, 3);
 }
 
 int room_1x1(struct mgenerator *mgen, int *map, int w, int h, int x, int y)
