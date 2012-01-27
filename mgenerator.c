@@ -32,25 +32,25 @@ struct point {
     int x, y;
 };
 
-struct param {
+struct plan {
     int (*create) (int *, int, int, int, int);
     int weight;
 };
 
-static struct param *select_param(struct darray *params)
+static struct plan *select_plan(struct darray *plans)
 {
     unsigned i, r, cap = 0;
-    struct param *tmp;
+    struct plan *tmp;
 
-    for (i = 0; i < params->length; ++i) {
-        darray_at(params, (void **)&tmp, i);
+    for (i = 0; i < plans->length; ++i) {
+        darray_at(plans, (void **)&tmp, i);
         cap += tmp->weight;
     }
 
     r = mtrandom() * cap;
 
     while (r < cap) {
-        darray_at(params, (void **)&tmp, --i);
+        darray_at(plans, (void **)&tmp, --i);
         cap -= tmp->weight;
     }
 
@@ -60,23 +60,23 @@ static struct param *select_param(struct darray *params)
 int mgenerator_open(struct mgenerator *mgen)
 {
     mgen->nodes = malloc(sizeof *mgen->nodes);
-    mgen->params = malloc(sizeof *mgen->params);
+    mgen->plans = malloc(sizeof *mgen->plans);
 
-    if (!mgen->nodes || !mgen->params) {
+    if (!mgen->nodes || !mgen->plans) {
         free(mgen->nodes);
-        free(mgen->params);
+        free(mgen->plans);
         return -1;
     }
 
     if (darray_open(mgen->nodes, 3) == -1) {
         free(mgen->nodes);
-        free(mgen->params);
+        free(mgen->plans);
         return -1;
     }
-    if (darray_open(mgen->params, 3) == -1) {
+    if (darray_open(mgen->plans, 3) == -1) {
         darray_close(mgen->nodes, free);
         free(mgen->nodes);
-        free(mgen->params);
+        free(mgen->plans);
         return -1;
     }
 
@@ -86,7 +86,7 @@ int mgenerator_open(struct mgenerator *mgen)
 void mgenerator_close(struct mgenerator *mgen)
 {
     darray_close(mgen->nodes, free);
-    darray_close(mgen->params, free);
+    darray_close(mgen->plans, free);
 }
 
 int mgenerator_add_node(struct mgenerator *mgen, int x, int y)
@@ -96,25 +96,25 @@ int mgenerator_add_node(struct mgenerator *mgen, int x, int y)
         return -1;
     p->x = x;
     p->y = y;
-    
+
     if (darray_push_back(mgen->nodes, (void *)p) == -1) {
         free(p);
         return -1;
     }
-    
+
     return 0;
 }
 
-int mgenerator_add_param(struct mgenerator *mgen, int (*create) (int *, int, int, int, int), int weight)
+int mgenerator_add_plan(struct mgenerator *mgen, int (*create) (int *, int, int, int, int), int weight)
 {
-    struct param *p = malloc(sizeof *p);
+    struct plan *p = malloc(sizeof *p);
     if (!p)
         return -1;
 
     p->create = create;
     p->weight = weight;
 
-    if (darray_push_back(mgen->params, (void *)p) == -1) {
+    if (darray_push_back(mgen->plans, (void *)p) == -1) {
         free(p);
         return -1;
     }
@@ -124,18 +124,18 @@ int mgenerator_add_param(struct mgenerator *mgen, int (*create) (int *, int, int
 
 int mgenerator_generate(struct mgenerator *mgen, int *map, int w, int h)
 {
-    const unsigned MAX_PARAM_TRIES = 10;
+    const unsigned MAX_plan_TRIES = 10;
     unsigned r, i, successes = 0;
     struct point *p;
-    struct param *selected;
+    struct plan *selected;
 
     while (mgen->nodes->length) {
         r = mtrandom() * mgen->nodes->length;
         darray_at(mgen->nodes, (void **)&p, r);
         darray_remove(mgen->nodes, NULL, r);
 
-        for (i = 0; i < MAX_PARAM_TRIES; ++i) {
-            selected = select_param(mgen->params);
+        for (i = 0; i < MAX_plan_TRIES; ++i) {
+            selected = select_plan(mgen->plans);
             if (selected->create(map, w, h, p->x, p->y) == 0) {
                 successes++;
                 break;

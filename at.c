@@ -836,7 +836,7 @@ int at_open(int width, int height, char *title, int pw, int ph)
     pixel_width = pw;
     pixel_height = ph;
 
-    SDL_Init(SDL_INIT_EVERYTHING);
+    SDL_Init(SDL_INIT_VIDEO);
     if (!SDL_SetVideoMode(width * pixel_width, height * pixel_height, 32, SDL_DOUBLEBUF))
         return -1;
     SDL_WM_SetCaption(title, NULL);

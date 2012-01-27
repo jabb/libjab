@@ -34,13 +34,13 @@ struct darray;
 
 struct mgenerator {
     struct darray *nodes;
-    struct darray *params;
+    struct darray *plans;
 };
 
 int mgenerator_open(struct mgenerator *mgen);
 void mgenerator_close(struct mgenerator *mgen);
 int mgenerator_add_node(struct mgenerator *mgen, int x, int y);
-int mgenerator_add_param(struct mgenerator *mgen, int (*create) (int *, int, int, int, int), int weight);
+int mgenerator_add_plan(struct mgenerator *mgen, int (*create) (int *, int, int, int, int), int weight);
 int mgenerator_generate(struct mgenerator *mgen, int *map, int w, int h);
 
 #ifdef __cplusplus

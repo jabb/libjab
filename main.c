@@ -261,22 +261,13 @@ int main(int argc, char *argv[])
 
     mtseed(time(NULL));
     mgenerator_open(&mgen);
-    mgenerator_add_param(&mgen, create_left_hall_5, 1);
-    mgenerator_add_param(&mgen, create_right_hall_5, 1);
-    mgenerator_add_param(&mgen, create_up_hall_5, 1);
-    mgenerator_add_param(&mgen, create_down_hall_5, 1);
+    mgenerator_add_plan(&mgen, create_left_hall_5, 1);
+    mgenerator_add_plan(&mgen, create_right_hall_5, 1);
+    mgenerator_add_plan(&mgen, create_up_hall_5, 1);
+    mgenerator_add_plan(&mgen, create_down_hall_5, 1);
 
-    x = mtrandom() * MWIDTH;
-    y = mtrandom() * MHEIGHT;
-    mgenerator_add_node(&mgen, x, y);
-    while (mgenerator_generate(&mgen, (int *)map, MWIDTH, MHEIGHT) < 5) {
-        for (x = 0; x < MWIDTH; ++x)
-            for (y = 0; y < MHEIGHT; ++y)
-                map[y][x] = 1;
-        x = mtrandom() * MWIDTH;
-        y = mtrandom() * MHEIGHT;
-        mgenerator_add_node(&mgen, x, y);
-    }
+    mgenerator_add_node(&mgen, mtrandom() * MWIDTH, mtrandom() * MHEIGHT);
+    mgenerator_generate(&mgen, (int *)map, MWIDTH, MHEIGHT);
 
     for (x = 0; x < MWIDTH; ++x)
         for (y = 0; y < MHEIGHT; ++y)
