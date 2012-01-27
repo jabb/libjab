@@ -25,6 +25,7 @@
  */
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 #include "at.h"
 #include "at_aux.h"
@@ -38,11 +39,12 @@
 
 #define IN_BOUNDS(x, y, w, h) ((x) >= 0 && (x) < (w) && (y) >= 0 && y < (h))
 
-int seen_map[MHEIGHT][MWIDTH] = {{0}};
-int obs_map[MHEIGHT][MWIDTH] = {{0}};
-int map[MHEIGHT][MWIDTH] = {{0}};
-
-int px = 0, py = 0;
+enum {
+    TPLAYER,
+    TFLOOR,
+    TWALL,
+    TMAX
+};
 
 struct tile {
     int symbol;
@@ -50,11 +52,12 @@ struct tile {
     int obstructed;
 };
 
-enum {
-    TPLAYER,
-    TFLOOR,
-    TWALL,
-    TMAX
+struct world {
+    int seen_map[MHEIGHT][MWIDTH];
+    int obs_map[MHEIGHT][MWIDTH];
+    int map[MHEIGHT][MWIDTH];
+
+    int px, py;
 };
 
 struct tile tiles[TMAX] = {
@@ -63,6 +66,79 @@ struct tile tiles[TMAX] = {
     {AT_AUX_SYM_WALL, 0x773300, 1},
 };
 
+static void output_tile(int x, int y, int tile, int flags);
+static void player_move(struct world *w, int dx, int dy);
+
+static void clear_world(struct world *w, int tile);
+static void generate_obstructed_map(struct world *w);
+static void find_open_location(struct world *w, int *x, int *y);
+
+static void input(struct world *w);
+static void output(struct world *w);
+
+int left_hall_5(struct mgenerator *mgen, int *map, int w, int h, int x, int y);
+int right_hall_5(struct mgenerator *mgen, int *map, int w, int h, int x, int y);
+int up_hall_5(struct mgenerator *mgen, int *map, int w, int h, int x, int y);
+int down_hall_5(struct mgenerator *mgen, int *map, int w, int h, int x, int y);
+int room_7x7(struct mgenerator *mgen, int *map, int w, int h, int x, int y);
+int room_5x5(struct mgenerator *mgen, int *map, int w, int h, int x, int y);
+int room_3x3(struct mgenerator *mgen, int *map, int w, int h, int x, int y);
+int room_1x1(struct mgenerator *mgen, int *map, int w, int h, int x, int y);
+
+int main(int argc, char *argv[])
+{
+    struct mgenerator mgen;
+    struct world world;
+    (void)argc;
+    (void)argv;
+    
+    memset(&world, 0, sizeof(world));
+    clear_world(&world, TWALL);
+
+    mtseed(time(NULL));
+    mgenerator_open(&mgen);
+    mgenerator_add_plan(&mgen, left_hall_5, 4);
+    mgenerator_add_plan(&mgen, right_hall_5, 4);
+    mgenerator_add_plan(&mgen, up_hall_5, 4);
+    mgenerator_add_plan(&mgen, down_hall_5, 4);
+    mgenerator_add_plan(&mgen, room_7x7, 32);
+    mgenerator_add_plan(&mgen, room_5x5, 16);
+    mgenerator_add_plan(&mgen, room_3x3, 8);
+    mgenerator_add_plan(&mgen, room_1x1, 1);
+
+    mgenerator_add_node(&mgen, mtrandom() * MWIDTH, mtrandom() * MHEIGHT);
+    mgenerator_generate(&mgen, (int *)world.map, MWIDTH, MHEIGHT, 0x7fffffff);
+
+    find_open_location(&world, &world.px, &world.py);
+    generate_obstructed_map(&world);
+
+    at_open(MWIDTH * AT_FWIDTH, MHEIGHT * AT_FHEIGHT, "at", 2, 2);
+
+    while (at_flush()) {
+        if (at_peek('Q'))
+            break;
+        if (at_peek('g')) {
+            clear_world(&world, TWALL);
+            
+            mgenerator_add_node(&mgen, mtrandom() * MWIDTH, mtrandom() * MHEIGHT);
+            mgenerator_generate(&mgen, (int *)world.map, MWIDTH, MHEIGHT, 0x7fffffff);
+            
+            find_open_location(&world, &world.px, &world.py);
+            generate_obstructed_map(&world);
+        }
+        if (at_peek('s')) {
+            memset(world.seen_map, 1, sizeof(world.seen_map));
+        }
+        input(&world);
+        at_clear(0);
+        output(&world);
+    }
+
+    mgenerator_close(&mgen);
+    at_close();
+    return 0;
+}
+
 static void output_tile(int x, int y, int tile, int flags)
 {
     at_set_font((unsigned *)at_aux_sym, AT_AUX_FWIDTH, AT_AUX_FHEIGHT);
@@ -70,59 +146,98 @@ static void output_tile(int x, int y, int tile, int flags)
     x *= AT_AUX_FWIDTH;
     y *= AT_AUX_FHEIGHT;
 
-    at_plot_glyph(x, y, tiles[tile].symbol, flags ? 0x222222 : tiles[tile].color);
+    at_plot_glyph(x, y, tiles[tile].symbol,
+                  flags ? 0x222222 : tiles[tile].color);
 
     at_set_font(NULL, 0, 0);
 }
 
-void pmove(int dx, int dy)
+static void player_move(struct world *w, int dx, int dy)
 {
-    if (IN_BOUNDS(px + dx, py + dy, MWIDTH, MHEIGHT) && !tiles[map[py + dy][px + dx]].obstructed) {
-        px += dx;
-        py += dy;
+    if (IN_BOUNDS(w->px + dx, w->py + dy, MWIDTH, MHEIGHT) &&
+        !tiles[w->map[w->py + dy][w->px + dx]].obstructed) {
+        w->px += dx;
+        w->py += dy;
     }
 }
 
-void input(void)
+static void clear_world(struct world *w, int tile)
 {
-    if (at_peek('h'))
-        pmove(-1, 0);
-    else if (at_peek('j'))
-        pmove(0, 1);
-    else if (at_peek('k'))
-        pmove(0, -1);
-    else if (at_peek('l'))
-        pmove(1, 0);
-    else if (at_peek('y'))
-        pmove(-1, -1);
-    else if (at_peek('u'))
-        pmove(1, -1);
-    else if (at_peek('b'))
-        pmove(-1, 1);
-    else if (at_peek('n'))
-        pmove(1, 1);
+    int x, y;
+
+    for (x = 0; x < MWIDTH; ++x) {
+        for (y = 0; y < MHEIGHT; ++y) {
+            w->map[y][x] = tile;
+            w->seen_map[y][x] = 0;
+            w->obs_map[y][x] = 0;
+        }
+    }
 }
 
-void output(void)
+static void generate_obstructed_map(struct world *w)
+{
+    int x, y;
+    
+    for (x = 0; x < MWIDTH; ++x)
+        for (y = 0; y < MHEIGHT; ++y)
+            w->obs_map[y][x] = tiles[w->map[y][x]].obstructed;
+}
+
+static void find_open_location(struct world *w, int *x, int *y)
+{
+    int ix, iy;
+    
+    for (ix = 0; ix < MWIDTH; ++ix) {
+        for (iy = 0; iy < MHEIGHT; ++iy) {
+            if (!tiles[w->map[iy][ix]].obstructed) {
+                *x = ix;
+                *y = iy;
+                return;
+            }
+        }
+    }
+}
+
+static void input(struct world *w)
+{
+    if (at_peek('h'))
+        player_move(w, -1, 0);
+    else if (at_peek('j'))
+        player_move(w, 0, 1);
+    else if (at_peek('k'))
+        player_move(w, 0, -1);
+    else if (at_peek('l'))
+        player_move(w, 1, 0);
+    else if (at_peek('y'))
+        player_move(w, -1, -1);
+    else if (at_peek('u'))
+        player_move(w, 1, -1);
+    else if (at_peek('b'))
+        player_move(w, -1, 1);
+    else if (at_peek('n'))
+        player_move(w, 1, 1);
+}
+
+static void output(struct world *w)
 {
     int x, y;
 
     for (y = 0; y < MHEIGHT; ++y) {
         for (x = 0; x < MWIDTH; ++x) {
-            if (can_see(px, py, x, y, 8, (int *)obs_map, MWIDTH)) {
-                seen_map[y][x] = 1;
-                output_tile(x, y, map[y][x], 0);
+            if (can_see(w->px, w->py, x, y, 8, (int *)w->obs_map, MWIDTH)) {
+                w->seen_map[y][x] = 1;
+                output_tile(x, y, w->map[y][x], 0);
             }
-            else if (seen_map[y][x]) {
-                output_tile(x, y, map[y][x], 1);
+            else if (w->seen_map[y][x]) {
+                output_tile(x, y, w->map[y][x], 1);
             }
         }
     }
 
-    output_tile(px, py, TPLAYER, 0);
+    output_tile(w->px, w->py, TPLAYER, 0);
 }
 
-int create_left_hall_5(struct mgenerator *mgen, int *map, int w, int h, int x, int y)
+int left_hall_5(struct mgenerator *mgen, int *map, int w, int h, int x, int y)
 {
     int ix;
 
@@ -131,9 +246,11 @@ int create_left_hall_5(struct mgenerator *mgen, int *map, int w, int h, int x, i
             return -1;
 
         if (ix > x && ix + 1 < x + 5) {
-            if (!IN_BOUNDS(ix, y + 1, w, h) || !tiles[map[(y + 1) * w + ix]].obstructed)
+            if (!IN_BOUNDS(ix, y + 1, w, h) ||
+                !tiles[map[(y + 1) * w + ix]].obstructed)
                 return -1;
-            if (!IN_BOUNDS(ix, y - 1, w, h) || !tiles[map[(y - 1) * w + ix]].obstructed)
+            if (!IN_BOUNDS(ix, y - 1, w, h) ||
+                !tiles[map[(y - 1) * w + ix]].obstructed)
                 return -1;
         }
     }
@@ -149,7 +266,7 @@ int create_left_hall_5(struct mgenerator *mgen, int *map, int w, int h, int x, i
     return 0;
 }
 
-int create_right_hall_5(struct mgenerator *mgen, int *map, int w, int h, int x, int y)
+int right_hall_5(struct mgenerator *mgen, int *map, int w, int h, int x, int y)
 {
     int ix;
 
@@ -158,9 +275,11 @@ int create_right_hall_5(struct mgenerator *mgen, int *map, int w, int h, int x, 
             return -1;
 
         if (ix < x && ix - 1 > x - 5) {
-            if (!IN_BOUNDS(ix, y + 1, w, h) || !tiles[map[(y + 1) * w + ix]].obstructed)
+            if (!IN_BOUNDS(ix, y + 1, w, h) ||
+                !tiles[map[(y + 1) * w + ix]].obstructed)
                 return -1;
-            if (!IN_BOUNDS(ix, y - 1, w, h) || !tiles[map[(y - 1) * w + ix]].obstructed)
+            if (!IN_BOUNDS(ix, y - 1, w, h) ||
+                !tiles[map[(y - 1) * w + ix]].obstructed)
                 return -1;
         }
     }
@@ -176,7 +295,7 @@ int create_right_hall_5(struct mgenerator *mgen, int *map, int w, int h, int x, 
     return 0;
 }
 
-int create_up_hall_5(struct mgenerator *mgen, int *map, int w, int h, int x, int y)
+int up_hall_5(struct mgenerator *mgen, int *map, int w, int h, int x, int y)
 {
     int iy;
 
@@ -185,9 +304,11 @@ int create_up_hall_5(struct mgenerator *mgen, int *map, int w, int h, int x, int
             return -1;
 
         if (iy < y && iy - 1 > y - 5) {
-            if (!IN_BOUNDS(x + 1, iy, w, h) || !tiles[map[iy * w + (x + 1)]].obstructed)
+            if (!IN_BOUNDS(x + 1, iy, w, h) ||
+                !tiles[map[iy * w + (x + 1)]].obstructed)
                 return -1;
-            if (!IN_BOUNDS(x - 1, iy, w, h) || !tiles[map[iy * w + (x - 1)]].obstructed)
+            if (!IN_BOUNDS(x - 1, iy, w, h) ||
+                !tiles[map[iy * w + (x - 1)]].obstructed)
                 return -1;
         }
     }
@@ -203,7 +324,7 @@ int create_up_hall_5(struct mgenerator *mgen, int *map, int w, int h, int x, int
     return 0;
 }
 
-int create_down_hall_5(struct mgenerator *mgen, int *map, int w, int h, int x, int y)
+int down_hall_5(struct mgenerator *mgen, int *map, int w, int h, int x, int y)
 {
     int iy;
 
@@ -212,9 +333,11 @@ int create_down_hall_5(struct mgenerator *mgen, int *map, int w, int h, int x, i
             return -1;
 
         if (iy > y && iy + 1 < y + 5) {
-            if (!IN_BOUNDS(x + 1, iy, w, h) || !tiles[map[iy * w + (x + 1)]].obstructed)
+            if (!IN_BOUNDS(x + 1, iy, w, h) ||
+                !tiles[map[iy * w + (x + 1)]].obstructed)
                 return -1;
-            if (!IN_BOUNDS(x - 1, iy, w, h) || !tiles[map[iy * w + (x - 1)]].obstructed)
+            if (!IN_BOUNDS(x - 1, iy, w, h) ||
+                !tiles[map[iy * w + (x - 1)]].obstructed)
                 return -1;
         }
     }
@@ -230,7 +353,7 @@ int create_down_hall_5(struct mgenerator *mgen, int *map, int w, int h, int x, i
     return 0;
 }
 
-int create_room_7x7(struct mgenerator *mgen, int *map, int w, int h, int x, int y)
+int room_7x7(struct mgenerator *mgen, int *map, int w, int h, int x, int y)
 {
     int ix, iy;
 
@@ -255,7 +378,7 @@ int create_room_7x7(struct mgenerator *mgen, int *map, int w, int h, int x, int 
     return 0;
 }
 
-int create_room_5x5(struct mgenerator *mgen, int *map, int w, int h, int x, int y)
+int room_5x5(struct mgenerator *mgen, int *map, int w, int h, int x, int y)
 {
     int ix, iy;
 
@@ -280,7 +403,7 @@ int create_room_5x5(struct mgenerator *mgen, int *map, int w, int h, int x, int 
     return 0;
 }
 
-int create_room_3x3(struct mgenerator *mgen, int *map, int w, int h, int x, int y)
+int room_3x3(struct mgenerator *mgen, int *map, int w, int h, int x, int y)
 {
     int ix, iy;
 
@@ -305,7 +428,7 @@ int create_room_3x3(struct mgenerator *mgen, int *map, int w, int h, int x, int 
     return 0;
 }
 
-int create_room_1x1(struct mgenerator *mgen, int *map, int w, int h, int x, int y)
+int room_1x1(struct mgenerator *mgen, int *map, int w, int h, int x, int y)
 {
     int ix, iy;
 
@@ -316,76 +439,5 @@ int create_room_1x1(struct mgenerator *mgen, int *map, int w, int h, int x, int 
 
     mgenerator_add_node(mgen, x + mtrandom() * 3 - 1, y + mtrandom() * 3 - 1);
 
-    return 0;
-}
-
-int main(int argc, char *argv[])
-{
-    struct mgenerator mgen;
-    unsigned x, y;
-    (void)argc;
-    (void)argv;
-
-    for (x = 0; x < MWIDTH; ++x)
-        for (y = 0; y < MHEIGHT; ++y)
-            map[y][x] = TWALL;
-
-    mtseed(time(NULL));
-    mgenerator_open(&mgen);
-    mgenerator_add_plan(&mgen, create_left_hall_5, 4);
-    mgenerator_add_plan(&mgen, create_right_hall_5, 4);
-    mgenerator_add_plan(&mgen, create_up_hall_5, 4);
-    mgenerator_add_plan(&mgen, create_down_hall_5, 4);
-    mgenerator_add_plan(&mgen, create_room_7x7, 32);
-    mgenerator_add_plan(&mgen, create_room_5x5, 16);
-    mgenerator_add_plan(&mgen, create_room_3x3, 8);
-    mgenerator_add_plan(&mgen, create_room_1x1, 1);
-
-    mgenerator_add_node(&mgen, mtrandom() * MWIDTH, mtrandom() * MHEIGHT);
-    mgenerator_generate(&mgen, (int *)map, MWIDTH, MHEIGHT, 0x7fffffff);
-
-    for (x = 0; x < MWIDTH; ++x)
-        for (y = 0; y < MHEIGHT; ++y)
-            if (!tiles[map[y][x]].obstructed)
-                px = x, py = y;
-
-    for (x = 0; x < MWIDTH; ++x)
-        for (y = 0; y < MHEIGHT; ++y)
-            obs_map[y][x] = tiles[map[y][x]].obstructed;
-
-    at_open(MWIDTH * AT_FWIDTH, MHEIGHT * AT_FHEIGHT, "at", 2, 2);
-
-    while (at_flush()) {
-        if (at_peek('Q'))
-            break;
-        if (at_peek('g')) {
-            for (x = 0; x < MWIDTH; ++x)
-                for (y = 0; y < MHEIGHT; ++y) {
-                    map[y][x] = TWALL;
-                    seen_map[y][x] = 0;
-                    obs_map[y][x] = 0;
-                }
-            mgenerator_add_node(&mgen, mtrandom() * MWIDTH, mtrandom() * MHEIGHT);
-            mgenerator_generate(&mgen, (int *)map, MWIDTH, MHEIGHT, 0x7fffffff);
-            for (x = 0; x < MWIDTH; ++x)
-                for (y = 0; y < MHEIGHT; ++y)
-                    if (!tiles[map[y][x]].obstructed)
-                        px = x, py = y;
-            for (x = 0; x < MWIDTH; ++x)
-                for (y = 0; y < MHEIGHT; ++y)
-                    obs_map[y][x] = tiles[map[y][x]].obstructed;
-        }
-        if (at_peek('s')) {
-            for (x = 0; x < MWIDTH; ++x)
-                for (y = 0; y < MHEIGHT; ++y)
-                    seen_map[y][x] = 1;
-        }
-        input();
-        at_clear(0);
-        output();
-    }
-
-    mgenerator_close(&mgen);
-    at_close();
     return 0;
 }
