@@ -43,7 +43,7 @@ int mgenerator_open(struct mgenerator *mgen);
 void mgenerator_close(struct mgenerator *mgen);
 int mgenerator_add_node(struct mgenerator *mgen, int x, int y);
 int mgenerator_add_plan(struct mgenerator *mgen, mgenerator_plan *pl, int weight);
-int mgenerator_generate(struct mgenerator *mgen, int *map, int w, int h);
+int mgenerator_generate(struct mgenerator *mgen, int *map, int w, int h, int lim);
 
 #ifdef __cplusplus
 }

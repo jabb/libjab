@@ -33,8 +33,8 @@
 #include "mgenerator.h"
 #include "random.h"
 
-#define MWIDTH  40
-#define MHEIGHT 20
+#define MWIDTH  80
+#define MHEIGHT 40
 
 #define IN_BOUNDS(x, y, w, h) ((x) >= 0 && (x) < (w) && (y) >= 0 && y < (h))
 
@@ -60,7 +60,7 @@ static void output_tile(int x, int y, int tile, int flags)
 
     switch (tile) {
     case TPLAYER:
-        tile = AT_AUX_SYM_HUMAN;
+        tile = AT_AUX_SYM_HUMAN_WEAPON;
         if (flags)
             color = 0x222222;
         else
@@ -251,8 +251,8 @@ int create_room_7x7(struct mgenerator *mgen, int *map, int w, int h, int x, int 
 {
     int ix, iy;
 
-    for (ix = x - 3; ix <= x + 3; ++ix) {
-        for (iy = y - 3; iy <= y + 3; ++iy) {
+    for (ix = x - 4; ix <= x + 4; ++ix) {
+        for (iy = y - 4; iy <= y + 4; ++iy) {
             if (ix == x || iy == y)
                 continue;
             if (!IN_BOUNDS(ix, iy, w, h) || !map[iy * w + ix])
@@ -297,6 +297,20 @@ int create_room_3x3(struct mgenerator *mgen, int *map, int w, int h, int x, int 
     return 0;
 }
 
+int create_room_1x1(struct mgenerator *mgen, int *map, int w, int h, int x, int y)
+{
+    int ix, iy;
+
+    for (ix = x; ix <= x; ++ix)
+        for (iy = y; iy <= y; ++iy)
+            if (IN_BOUNDS(ix, iy, w, h))
+                map[iy * w + ix] = 0;
+
+    mgenerator_add_node(mgen, x + mtrandom() * 3 - 1, y + mtrandom() * 3 - 1);
+
+    return 0;
+}
+
 int main(int argc, char *argv[])
 {
     struct mgenerator mgen;
@@ -310,22 +324,23 @@ int main(int argc, char *argv[])
 
     mtseed(time(NULL));
     mgenerator_open(&mgen);
-    mgenerator_add_plan(&mgen, create_left_hall_5, 3);
-    mgenerator_add_plan(&mgen, create_right_hall_5, 3);
-    mgenerator_add_plan(&mgen, create_up_hall_5, 3);
-    mgenerator_add_plan(&mgen, create_down_hall_5, 3);
-    mgenerator_add_plan(&mgen, create_room_7x7, 3);
-    mgenerator_add_plan(&mgen, create_room_3x3, 1);
+    mgenerator_add_plan(&mgen, create_left_hall_5, 4);
+    mgenerator_add_plan(&mgen, create_right_hall_5, 4);
+    mgenerator_add_plan(&mgen, create_up_hall_5, 4);
+    mgenerator_add_plan(&mgen, create_down_hall_5, 4);
+    mgenerator_add_plan(&mgen, create_room_7x7, 32);
+    mgenerator_add_plan(&mgen, create_room_3x3, 8);
+    mgenerator_add_plan(&mgen, create_room_1x1, 1);
 
     mgenerator_add_node(&mgen, mtrandom() * MWIDTH, mtrandom() * MHEIGHT);
-    mgenerator_generate(&mgen, (int *)map, MWIDTH, MHEIGHT);
+    mgenerator_generate(&mgen, (int *)map, MWIDTH, MHEIGHT, 0x7fffffff);
 
     for (x = 0; x < MWIDTH; ++x)
         for (y = 0; y < MHEIGHT; ++y)
             if (!map[y][x])
                 px = x, py = y;
 
-    at_open(MWIDTH * AT_FWIDTH, MHEIGHT * AT_FHEIGHT, "at", 3, 3);
+    at_open(MWIDTH * AT_FWIDTH, MHEIGHT * AT_FHEIGHT, "at", 2, 2);
 
     while (at_flush()) {
         if (at_peek('Q'))
@@ -337,11 +352,16 @@ int main(int argc, char *argv[])
                     seen_map[y][x] = 0;
                 }
             mgenerator_add_node(&mgen, mtrandom() * MWIDTH, mtrandom() * MHEIGHT);
-            mgenerator_generate(&mgen, (int *)map, MWIDTH, MHEIGHT);
+            mgenerator_generate(&mgen, (int *)map, MWIDTH, MHEIGHT, 0x7fffffff);
             for (x = 0; x < MWIDTH; ++x)
                 for (y = 0; y < MHEIGHT; ++y)
                     if (!map[y][x])
                         px = x, py = y;
+        }
+        if (at_peek('s')) {
+            for (x = 0; x < MWIDTH; ++x)
+                for (y = 0; y < MHEIGHT; ++y)
+                    seen_map[y][x] = 1;
         }
         input();
         at_clear(0);
