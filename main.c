@@ -203,10 +203,10 @@ int create_up_hall_5(int *map, int w, int h, int x, int y)
         if (!IN_BOUNDS(x, iy, w, h) || !map[iy * w + x])
             return -1;
 
-        if (iy > y && iy - 1 > y - 5) {
-            if (!IN_BOUNDS(x, iy + 1, w, h) || !map[(iy + 1) * w + x])
+        if (iy < y && iy - 1 > y - 5) {
+            if (!IN_BOUNDS(x + 1, iy, w, h) || !map[iy * w + (x + 1)])
                 return -1;
-            if (!IN_BOUNDS(x, iy - 1, w, h) || !map[(iy - 1) * w + x])
+            if (!IN_BOUNDS(x - 1, iy, w, h) || !map[iy * w + (x - 1)])
                 return -1;
         }
     }
@@ -231,9 +231,9 @@ int create_down_hall_5(int *map, int w, int h, int x, int y)
             return -1;
 
         if (iy > y && iy + 1 < y + 5) {
-            if (!IN_BOUNDS(x, iy + 1, w, h) || !map[(iy + 1) * w + x])
+            if (!IN_BOUNDS(x + 1, iy, w, h) || !map[iy * w + (x + 1)])
                 return -1;
-            if (!IN_BOUNDS(x, iy - 1, w, h) || !map[(iy - 1) * w + x])
+            if (!IN_BOUNDS(x - 1, iy, w, h) || !map[iy * w + (x - 1)])
                 return -1;
         }
     }
