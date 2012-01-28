@@ -90,7 +90,6 @@ int down_hall_5(struct mgenerator *mgen, int *map, int w, int h, int x, int y);
 int room_7x7(struct mgenerator *mgen, int *map, int w, int h, int x, int y);
 int room_5x5(struct mgenerator *mgen, int *map, int w, int h, int x, int y);
 int room_3x3(struct mgenerator *mgen, int *map, int w, int h, int x, int y);
-int room_1x1(struct mgenerator *mgen, int *map, int w, int h, int x, int y);
 int treasure_3x3(struct mgenerator *mgen, int *map, int w, int h, int x, int y);
 
 int main(int argc, char *argv[])
@@ -112,7 +111,6 @@ int main(int argc, char *argv[])
     mgenerator_add_plan(&mgen, room_7x7, 32);
     mgenerator_add_plan(&mgen, room_5x5, 16);
     mgenerator_add_plan(&mgen, room_3x3, 4);
-    /*mgenerator_add_plan(&mgen, room_1x1, 1);*/
     mgenerator_add_plan(&mgen, treasure_3x3, 4);
 
     mgenerator_add_node(&mgen, mtrandom() * MWIDTH, mtrandom() * MHEIGHT);
@@ -427,18 +425,6 @@ int room_5x5(struct mgenerator *mgen, int *map, int w, int h, int x, int y)
 int room_3x3(struct mgenerator *mgen, int *map, int w, int h, int x, int y)
 {
     return room_XxX(mgen, map, w, h, x, y, 3);
-}
-
-int room_1x1(struct mgenerator *mgen, int *map, int w, int h, int x, int y)
-{
-    if (IN_BOUNDS(x, y, w, h) && map[y * w + x] == TWALL)
-        map[y * w + x] = TFLOOR;
-    else
-        return -1;
-
-    mgenerator_add_node(mgen, x + mtrandom() * 3 - 1, y + mtrandom() * 3 - 1);
-
-    return 0;
 }
 
 int treasure_3x3(struct mgenerator *mgen, int *map, int w, int h, int x, int y)
