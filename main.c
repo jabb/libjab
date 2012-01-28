@@ -63,11 +63,11 @@ struct world {
 };
 
 struct tile tiles[TMAX] = {
-    {AT_AUX_SYM_HUMAN, 0xff0000, 0},
-    {AT_AUX_SYM_FLOOR, 0x777777, 0},
-    {AT_AUX_SYM_WALL, 0x773300, 1},
-    {AT_AUX_SYM_CHEST, 0x776600, 0},
-    {AT_AUX_SYM_TABLE, 0x774400, 0},
+    {'@', 0xff0000, 0},
+    {'.', 0x777777, 0},
+    {'#', 0x773300, 1},
+    {236, 0x776600, 0},
+    {227, 0x774400, 0},
 };
 
 static void output_tile(int x, int y, int tile, int flags);
@@ -150,15 +150,11 @@ int main(int argc, char *argv[])
 
 static void output_tile(int x, int y, int tile, int flags)
 {
-    at_set_font((unsigned *)at_aux_sym, AT_AUX_FWIDTH, AT_AUX_FHEIGHT);
-
     x *= AT_AUX_FWIDTH;
     y *= AT_AUX_FHEIGHT;
 
     at_plot_glyph(x, y, tiles[tile].symbol,
                   flags ? 0x222222 : tiles[tile].color);
-
-    at_set_font(NULL, 0, 0);
 }
 
 static void player_move(struct world *w, int dx, int dy)
