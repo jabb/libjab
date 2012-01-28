@@ -34,8 +34,8 @@
 #include "mgenerator.h"
 #include "random.h"
 
-#define MWIDTH  80
-#define MHEIGHT 40
+#define MWIDTH  40
+#define MHEIGHT 20
 
 #define IN_BOUNDS(x, y, w, h) ((x) >= 0 && (x) < (w) && (y) >= 0 && y < (h))
 
@@ -112,7 +112,7 @@ int main(int argc, char *argv[])
     mgenerator_add_plan(&mgen, room_7x7, 32);
     mgenerator_add_plan(&mgen, room_5x5, 16);
     mgenerator_add_plan(&mgen, room_3x3, 4);
-    mgenerator_add_plan(&mgen, room_1x1, 1);
+    /*mgenerator_add_plan(&mgen, room_1x1, 1);*/
     mgenerator_add_plan(&mgen, treasure_3x3, 4);
 
     mgenerator_add_node(&mgen, mtrandom() * MWIDTH, mtrandom() * MHEIGHT);
@@ -122,7 +122,7 @@ int main(int argc, char *argv[])
     find_open_location(&world, &world.px, &world.py);
     generate_obstructed_map(&world);
 
-    at_open(MWIDTH * AT_FWIDTH, MHEIGHT * AT_FHEIGHT, "at", 2, 2);
+    at_open(MWIDTH * AT_FWIDTH, MHEIGHT * AT_FHEIGHT, "at", 5, 5);
 
     while (at_flush()) {
         if (at_peek('Q'))
@@ -250,7 +250,7 @@ static void output(struct world *w)
 
     for (y = 0; y < MHEIGHT; ++y) {
         for (x = 0; x < MWIDTH; ++x) {
-            if (can_see(w->px, w->py, x, y, 8, (int *)w->obs_map, MWIDTH)) {
+            if (can_see(w->px, w->py, x, y, 10, (int *)w->obs_map, MWIDTH)) {
                 w->seen_map[y][x] = 1;
                 output_tile(x, y, w->map[y][x], 0);
             }

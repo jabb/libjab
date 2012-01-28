@@ -126,21 +126,36 @@ int mgenerator_add_plan(struct mgenerator *mgen, mgenerator_plan *plan, int weig
 
 int mgenerator_generate(struct mgenerator *mgen, int *map, int w, int h, int lim)
 {
-    const int MAX_PLAN_TRIES = 10;
-    int r, i, successes = 0;
+    int r, successes = 0, found;
+    unsigned i;
     struct point *p;
     struct plan_and_weight *selected;
-    struct plan_and_weight *prev = NULL;
+    struct plan_and_weight *tried;
+    struct darray tries;
+    
+    darray_open(&tries, 16);
 
     while (mgen->nodes->length) {
         r = mtrandom() * mgen->nodes->length;
         darray_at(mgen->nodes, (void **)&p, r);
 
-        for (i = 0; i < MAX_PLAN_TRIES; ++i) {
+        while (tries.length < mgen->plans->length) {
             selected = select_plan(mgen->plans);
-            while (prev && selected == prev)
-                selected = select_plan(mgen->plans);
-            prev = selected;
+            for (;;) {
+                found = 0;
+                for (i = 0; i < tries.length; ++i) {
+                    darray_at(&tries, (void **)&tried, i);
+                    if (tried == selected)
+                        found = 1;
+                }
+                
+                if (found)
+                    selected = select_plan(mgen->plans);
+                else
+                    break;
+            }
+            
+            darray_push_back(&tries, selected);
 
             if (selected->plan(mgen, map, w, h, p->x, p->y) == 0) {
                 successes++;
@@ -149,10 +164,15 @@ int mgenerator_generate(struct mgenerator *mgen, int *map, int w, int h, int lim
         }
 
         darray_remove(mgen->nodes, free, r);
+        
+        while (tries.length)
+            darray_remove(&tries, NULL, tries.length - 1);
 
         if (successes >= lim)
             break;
     }
+    
+    darray_close(&tries, NULL);
 
     while (mgen->nodes->length)
         darray_remove(mgen->nodes, free, mgen->nodes->length - 1);
