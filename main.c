@@ -98,7 +98,7 @@ int main(int argc, char *argv[])
     struct world world;
     (void)argc;
     (void)argv;
-    
+
     memset(&world, 0, sizeof(world));
     clear_world(&world, TWALL);
 
@@ -127,10 +127,10 @@ int main(int argc, char *argv[])
             break;
         if (at_peek('g')) {
             clear_world(&world, TWALL);
-            
+
             mgenerator_add_node(&mgen, mtrandom() * MWIDTH, mtrandom() * MHEIGHT);
             mgenerator_generate(&mgen, (int *)world.map, MWIDTH, MHEIGHT, 0x7fffffff);
-            
+
             border_map(&world, TWALL);
             find_open_location(&world, &world.px, &world.py);
             generate_obstructed_map(&world);
@@ -186,7 +186,7 @@ static void clear_world(struct world *w, int tile)
 static void generate_obstructed_map(struct world *w)
 {
     int x, y;
-    
+
     for (x = 0; x < MWIDTH; ++x)
         for (y = 0; y < MHEIGHT; ++y)
             w->obs_map[y][x] = tiles[w->map[y][x]].obstructed;
@@ -195,7 +195,7 @@ static void generate_obstructed_map(struct world *w)
 static void find_open_location(struct world *w, int *x, int *y)
 {
     int ix, iy;
-    
+
     for (ix = 0; ix < MWIDTH; ++ix) {
         for (iy = 0; iy < MHEIGHT; ++iy) {
             if (!tiles[w->map[iy][ix]].obstructed) {
@@ -210,12 +210,12 @@ static void find_open_location(struct world *w, int *x, int *y)
 static void border_map(struct world *w, int tile)
 {
     int x, y;
-    
+
     for (x = 0; x < MWIDTH; ++x) {
         w->map[0][x] = tile;
         w->map[MHEIGHT - 1][x] = tile;
     }
-    
+
     for (y = 0; y < MHEIGHT; ++y) {
         w->map[y][0] = tile;
         w->map[y][MWIDTH - 1] = tile;
@@ -391,15 +391,15 @@ int room_XxX(struct mgenerator *mgen, int *map, int w, int h, int x, int y, int 
     if (mtrandom() * 100 < 40) {
         map[(y - size2) * w + (x - size2)] = TTABLE;
     }
-    
+
     if (mtrandom() * 100 < 40) {
         map[(y - size2) * w + (x + size2)] = TTABLE;
     }
-    
+
     if (mtrandom() * 100 < 40) {
         map[(y + size2) * w + (x - size2)] = TTABLE;
     }
-    
+
     if (mtrandom() * 100 < 40) {
         map[(y + size2) * w + (x + size2)] = TTABLE;
     }
@@ -436,6 +436,6 @@ int treasure_3x3(struct mgenerator *mgen, int *map, int w, int h, int x, int y)
     map[(y - 1) * w + (x + 1)] = TCHEST;
     map[(y + 1) * w + (x - 1)] = TCHEST;
     map[(y + 1) * w + (x + 1)] = TCHEST;
-    
+
     return 0;
 }
