@@ -34,8 +34,8 @@
 #include "mgenerator.h"
 #include "random.h"
 
-#define MWIDTH  40
-#define MHEIGHT 20
+#define MWIDTH  160
+#define MHEIGHT 80
 
 #define IN_BOUNDS(x, y, w, h) ((x) >= 0 && (x) < (w) && (y) >= 0 && y < (h))
 
@@ -90,6 +90,7 @@ int down_hall_5(struct mgenerator *mgen, int *map, int w, int h, int x, int y);
 int room_7x7(struct mgenerator *mgen, int *map, int w, int h, int x, int y);
 int room_5x5(struct mgenerator *mgen, int *map, int w, int h, int x, int y);
 int room_3x3(struct mgenerator *mgen, int *map, int w, int h, int x, int y);
+int diamond_7(struct mgenerator *mgen, int *map, int w, int h, int x, int y);
 int treasure_3x3(struct mgenerator *mgen, int *map, int w, int h, int x, int y);
 
 int main(int argc, char *argv[])
@@ -111,6 +112,7 @@ int main(int argc, char *argv[])
     mgenerator_add_plan(&mgen, room_7x7, 32);
     mgenerator_add_plan(&mgen, room_5x5, 16);
     mgenerator_add_plan(&mgen, room_3x3, 4);
+    mgenerator_add_plan(&mgen, diamond_7, 4);
     mgenerator_add_plan(&mgen, treasure_3x3, 4);
 
     mgenerator_add_node(&mgen, mtrandom() * MWIDTH, mtrandom() * MHEIGHT);
@@ -120,7 +122,7 @@ int main(int argc, char *argv[])
     find_open_location(&world, &world.px, &world.py);
     generate_obstructed_map(&world);
 
-    at_open(MWIDTH * AT_FWIDTH, MHEIGHT * AT_FHEIGHT, "at", 5, 5);
+    at_open(MWIDTH * AT_FWIDTH, MHEIGHT * AT_FHEIGHT, "at", 1, 1);
 
     while (at_flush()) {
         if (at_peek('Q'))
@@ -404,6 +406,71 @@ int room_XxX(struct mgenerator *mgen, int *map, int w, int h, int x, int y, int 
     mgenerator_add_node(mgen, x, y - size2p1);
     mgenerator_add_node(mgen, x + size2p1, y);
     mgenerator_add_node(mgen, x - size2p1, y);
+
+    return 0;
+}
+
+
+int diamond_7(struct mgenerator *mgen, int *map, int w, int h, int x, int y)
+{
+    int border_delta[12][2] = {
+        {-3, -1},
+        {-2, -1},
+        {-1, -2},
+        {-2, -1},
+        {-1, -2},
+        {-1, -3},
+
+        { 3, -1},
+        { 2, -1},
+        { 1, -2},
+        { 2, -1},
+        { 1, -2},
+        { 1, -3},
+    };
+    int delta[16][2] = {
+        {-3,  0},
+        {-2,  0},
+        {-2, -1},
+        {-1,  0},
+        {-1, -1},
+        {-1, -2},
+        { 0,  0},
+        { 0, -1},
+        { 0, -2},
+        { 0, -3},
+
+        { 1,  0},
+        { 1, -1},
+        { 1, -2},
+        { 2,  0},
+        { 2, -1},
+        { 3,  0},
+    };
+    int i, tx, ty;
+
+    for (i = 0; i < 12; ++i) {
+        tx = x + border_delta[i][0];
+        ty = y + border_delta[i][1];
+        if (!IN_BOUNDS(tx, ty, w, h) || map[ty * w + tx] != TWALL)
+            return -1;
+        ty = y + border_delta[i][1] * -1;
+        if (!IN_BOUNDS(tx, ty, w, h) || map[ty * w + tx] != TWALL)
+            return -1;
+    }
+
+    for (i = 0; i < 16; ++i) {
+        tx = x + delta[i][0];
+        ty = y + delta[i][1];
+        map[ty * w + tx] = TFLOOR;
+        ty = y + delta[i][1] * -1;
+        map[ty * w + tx] = TFLOOR;
+    }
+
+    mgenerator_add_node(mgen, x, y + 4);
+    mgenerator_add_node(mgen, x, y - 4);
+    mgenerator_add_node(mgen, x + 4, y);
+    mgenerator_add_node(mgen, x - 4, y);
 
     return 0;
 }
