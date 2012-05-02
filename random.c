@@ -3,6 +3,8 @@
 
 #include <stdlib.h>
 
+
+
 /******************************************************************************\
 Mersenne Twister
 \******************************************************************************/
@@ -64,7 +66,7 @@ void mt_seed(mt19937_state *st, unsigned s)
 
 
 
-unsigned mt_random(mt19937_state *st)
+unsigned mt_random_u(mt19937_state *st)
 {
     unsigned mag01[2] = {0x0, MATRIX_A};
     unsigned y;
@@ -94,6 +96,8 @@ unsigned mt_random(mt19937_state *st)
     return y;
 }
 
+
+
 /******************************************************************************\
 Carry Multiply with Carry
 \******************************************************************************/
@@ -114,7 +118,7 @@ void cmwc_seed(cmwc_state *st, unsigned seed)
 
 
 
-unsigned cmwc_random(cmwc_state *st)
+unsigned cmwc_random_u(cmwc_state *st)
 {
     unsigned th, tl, q, qh, ql, a = 18782;
     unsigned x, r = 0xfffffffe;
@@ -136,5 +140,12 @@ unsigned cmwc_random(cmwc_state *st)
         st->c++;
     }
     return st->q[st->i] = r - x;
+}
+
+
+
+double cmwc_random_d(cmwc_state *st)
+{
+    return cmwc_random_u(st) * 2.3283064365386963e-10;
 }
 

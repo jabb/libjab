@@ -38,7 +38,7 @@ typedef struct {
 } mt19937_state;
 
 void mt_seed(mt19937_state *st, unsigned s);
-unsigned mt_random(mt19937_state *st);
+unsigned mt_random_u(mt19937_state *st);
 
 enum {CMWC_K = 4096};
 
@@ -49,7 +49,8 @@ typedef struct {
 } cmwc_state;
 
 void cmwc_seed(cmwc_state *st, unsigned s);
-unsigned cmwc_random(cmwc_state *st);
+unsigned cmwc_random_u(cmwc_state *st);
+double cmwc_random_d(cmwc_state *st);
 
 #ifdef __cplusplus
 }
