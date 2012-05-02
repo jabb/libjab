@@ -144,6 +144,12 @@ static unsigned cmwc_random(cmwc_state *st)
 
 
 
+/******************************************************************************\
+Generic RNG
+\******************************************************************************/
+
+
+
 void rng_seed(rng_state *st, unsigned s, unsigned type)
 {
     st->type = type;
