@@ -532,22 +532,3 @@ double noise_generate(noise_state *ns, double x, double y, double z)
 
     return n;
 }
-
-#include <stdio.h>
-#include <time.h>
-
-int main(void)
-{
-    uint32_t i;
-    rng_state rng;
-    noise_state ns;
-
-    rng_seed(&rng, time(NULL), RNG_XOR128);
-    noise_seed(&ns, &rng, NOISE_PERLIN);
-
-    for (i = 0; i < 50; ++i) {
-        printf("(%f, %f, %f): %f\n", i + 0.0, 0.0, 0.0, noise_generate(&ns, i + 0.5, 0, 0));
-    }
-
-    return 0;
-}
