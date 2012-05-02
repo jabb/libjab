@@ -138,25 +138,3 @@ unsigned cmwc_random(cmwc_state *st)
     return st->q[st->i] = r - x;
 }
 
-#include <stdio.h>
-#include <time.h>
-
-int main(void)
-{
-    FILE *fout;
-    mt19937_state rng;
-    unsigned seed = time(NULL), count = 50000000, r;
-    mt_seed(&rng, seed);
-
-    fout = fopen("bits", "wb");
-
-    while (count --> 0) {
-        r = mt_random(&rng);
-        fwrite(&r, sizeof(unsigned), 1, fout);
-    }
-
-    fclose(fout);
-
-    return 0;
-}
-
