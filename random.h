@@ -68,7 +68,9 @@ typedef struct {
 } rng_state;
 
 void rng_seed(rng_state *st, uint32_t s, int type);
+/* [0, 2^32] */
 uint32_t rng_random_u(rng_state *st);
+/* [0, 1) */
 double rng_random_d(rng_state *st);
 
 #ifdef __cplusplus

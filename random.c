@@ -303,6 +303,8 @@ void rng_seed(rng_state *st, uint32_t seed, int type)
     }
 }
 
+
+
 uint32_t rng_random_u(rng_state *st)
 {
     switch (st->type) {
@@ -321,8 +323,9 @@ uint32_t rng_random_u(rng_state *st)
 
 }
 
+
+
 double rng_random_d(rng_state *st)
 {
     return rng_random_u(st) * 2.3283064365386963e-10;
 }
-
