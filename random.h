@@ -83,6 +83,12 @@ void rng_seed(rng_state *st, uint32_t s, int type);
 uint32_t rng_random_u(rng_state *st);
 /* [0, 1) */
 double rng_random_d(rng_state *st);
+/* [0, max) */
+double rng_random_m(rng_state *st, int32_t max);
+/* [min, max) */
+double rng_random_mm(rng_state *st, int32_t min, int32_t max);
+/* min to max */
+int32_t rng_random_r(rng_state *st, int32_t min, int32_t max);
 
 #ifdef __cplusplus
 }

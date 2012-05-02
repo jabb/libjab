@@ -1,6 +1,7 @@
 
 #include "random.h"
 
+#include <math.h>
 #include <stdlib.h>
 
 /******************************************************************************\
@@ -359,4 +360,25 @@ uint32_t rng_random_u(rng_state *st)
 double rng_random_d(rng_state *st)
 {
     return rng_random_u(st) * 2.3283064365386963e-10;
+}
+
+
+
+double rng_random_m(rng_state *st, int32_t max)
+{
+    return rng_random_d(st) * max;
+}
+
+
+
+double rng_random_mm(rng_state *st, int32_t min, int32_t max)
+{
+    return rng_random_m(st, max - min) + min;
+}
+
+
+
+int32_t rng_random_r(rng_state *st, int32_t min, int32_t max)
+{
+    return floor(rng_random_mm(st, min, max + 1));
 }
