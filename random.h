@@ -26,6 +26,8 @@
 #ifndef RANDOM_H
 #define RANDOM_H
 
+#include "types.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -33,30 +35,38 @@ extern "C" {
 enum {MT19937_K = 624};
 
 typedef struct {
-    unsigned    mt[MT19937_K];
-    signed      mti;
+    uint32_t    mt[MT19937_K];
+    int32_t     mti;
 } mt19937_state;
+
+typedef struct {
+    uint32_t status[4];
+    uint32_t mat1;
+    uint32_t mat2;
+    uint32_t tmat;
+} tinymt_state;
 
 enum {CMWC_K = 4096};
 
 typedef struct {
-    unsigned q[CMWC_K];
-    unsigned c;
-    unsigned i;
+    uint32_t q[CMWC_K];
+    uint32_t c;
+    uint32_t i;
 } cmwc_state;
 
-enum {RNG_MT19937, RNG_CMWC};
+enum {RNG_MT19937, RNG_TINYMT, RNG_CMWC};
 
 typedef struct {
-    unsigned type;
+    int type;
     union {
-        cmwc_state      cmwc;
         mt19937_state   mt19937;
+        tinymt_state    tinymt;
+        cmwc_state      cmwc;
     } state;
 } rng_state;
 
-void rng_seed(rng_state *st, unsigned s, unsigned type);
-unsigned rng_random_u(rng_state *st);
+void rng_seed(rng_state *st, uint32_t s, int type);
+uint32_t rng_random_u(rng_state *st);
 double rng_random_d(rng_state *st);
 
 #ifdef __cplusplus

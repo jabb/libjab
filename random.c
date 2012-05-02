@@ -42,7 +42,7 @@ Mersenne Twister
 
 
 
-#define N MT19937_K
+#define N 624
 #define M 397
 #define MATRIX_A 0x9908b0dfU
 #define UPPER_MASK 0x80000000U
@@ -57,7 +57,7 @@ Mersenne Twister
 
 
 
-static void mt_seed(mt19937_state *st, unsigned s)
+static void mt_seed(mt19937_state *st, uint32_t s)
 {
     st->mt[0] = s & 0xffffffffU;
     for (st->mti = 1; st->mti < N; st->mti++)
@@ -66,10 +66,10 @@ static void mt_seed(mt19937_state *st, unsigned s)
 
 
 
-static unsigned mt_random(mt19937_state *st)
+static uint32_t mt_random(mt19937_state *st)
 {
-    unsigned mag01[2] = {0x0, MATRIX_A};
-    unsigned y;
+    static uint32_t mag01[2] = {0x0, MATRIX_A};
+    uint32_t y;
     int kk;
 
     if (st->mti >= N) {
@@ -81,7 +81,7 @@ static unsigned mt_random(mt19937_state *st)
             y = (st->mt[kk] & UPPER_MASK) | (st->mt[kk + 1] & LOWER_MASK);
             st->mt[kk] = st->mt[kk + (M - N)] ^ (y >> 1) ^ mag01[y & 0x1];
         }
-        y = (st->mt[N - 1] & UPPER_MASK) | (st->mt[0]&LOWER_MASK);
+        y = (st->mt[N - 1] & UPPER_MASK) | (st->mt[0] & LOWER_MASK);
         st->mt[N - 1] = st->mt[M - 1] ^ (y >> 1) ^ mag01[y & 0x1];
 
         st->mti = 0;
@@ -104,9 +104,9 @@ Carry Multiply with Carry
 
 
 
-static void cmwc_seed(cmwc_state *st, unsigned seed)
+static void cmwc_seed(cmwc_state *st, uint32_t seed)
 {
-    unsigned i;
+    uint32_t i;
 
     srand(seed);
     for (i = 0; i < CMWC_K; ++i) {
@@ -118,10 +118,10 @@ static void cmwc_seed(cmwc_state *st, unsigned seed)
 
 
 
-static unsigned cmwc_random(cmwc_state *st)
+static uint32_t cmwc_random(cmwc_state *st)
 {
-    unsigned th, tl, q, qh, ql, a = 18782;
-    unsigned x, r = 0xfffffffe;
+    uint32_t th, tl, q, qh, ql, a = 18782;
+    uint32_t x, r = 0xfffffffe;
 
     st->i = (st->i + 1) & (CMWC_K - 1);
 
@@ -150,7 +150,7 @@ Generic RNG
 
 
 
-void rng_seed(rng_state *st, unsigned s, unsigned type)
+void rng_seed(rng_state *st, uint32_t s, int type)
 {
     st->type = type;
 
@@ -167,7 +167,7 @@ void rng_seed(rng_state *st, unsigned s, unsigned type)
     }
 }
 
-unsigned rng_random_u(rng_state *st)
+uint32_t rng_random_u(rng_state *st)
 {
     switch (st->type) {
     case RNG_MT19937:
