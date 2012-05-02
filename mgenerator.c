@@ -49,7 +49,7 @@ static struct plan_and_weight *select_plan(struct darray *plans)
         cap += tmp->weight;
     }
 
-    r = rng_random_d(&rng) * cap;
+    r = rng_under(&rng, cap);
 
     while (r < cap) {
         darray_at(plans, (void **)&tmp, --i);
@@ -138,7 +138,7 @@ int mgenerator_generate(struct mgenerator *mgen, int *map, int w, int h, int lim
     darray_open(&tries, 16);
 
     while (mgen->nodes->length) {
-        r = rng_random_d(&rng) * mgen->nodes->length;
+        r = rng_under(&rng, mgen->nodes->length);
         darray_at(mgen->nodes, (void **)&p, r);
 
         while (tries.length < mgen->plans->length) {

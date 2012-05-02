@@ -117,7 +117,7 @@ int main(int argc, char *argv[])
     mgenerator_add_plan(&mgen, diamond_7, 4);
     mgenerator_add_plan(&mgen, treasure_3x3, 4);
 
-    mgenerator_add_node(&mgen, rng_random_d(&rng) * MWIDTH, rng_random_d(&rng) * MHEIGHT);
+    mgenerator_add_node(&mgen, rng_under(&rng, MWIDTH), rng_under(&rng, MHEIGHT));
     mgenerator_generate(&mgen, (int *)world.map, MWIDTH, MHEIGHT, 0x7fffffff);
 
     border_map(&world, TWALL);
@@ -132,7 +132,7 @@ int main(int argc, char *argv[])
         if (at_peek('g')) {
             clear_world(&world, TWALL);
 
-            mgenerator_add_node(&mgen, rng_random_d(&rng) * MWIDTH, rng_random_d(&rng) * MHEIGHT);
+            mgenerator_add_node(&mgen, rng_under(&rng, MWIDTH), rng_under(&rng, MHEIGHT));
             mgenerator_generate(&mgen, (int *)world.map, MWIDTH, MHEIGHT, 0x7fffffff);
 
             border_map(&world, TWALL);
@@ -282,8 +282,8 @@ int left_hall_5(struct mgenerator *mgen, int *map, int w, int h, int x, int y)
 
     mgenerator_add_node(mgen, x - 1, y);
     mgenerator_add_node(mgen, x + 5, y);
-    mgenerator_add_node(mgen, x + rng_random_d(&rng) * 5, y - 1);
-    mgenerator_add_node(mgen, x + rng_random_d(&rng) * 5, y + 1);
+    mgenerator_add_node(mgen, x + rng_under(&rng, 5), y - 1);
+    mgenerator_add_node(mgen, x + rng_under(&rng, 5), y + 1);
 
     return 0;
 }
@@ -309,8 +309,8 @@ int right_hall_5(struct mgenerator *mgen, int *map, int w, int h, int x, int y)
 
     mgenerator_add_node(mgen, x - 5, y);
     mgenerator_add_node(mgen, x + 1, y);
-    mgenerator_add_node(mgen, x - rng_random_d(&rng) * 5, y - 1);
-    mgenerator_add_node(mgen, x - rng_random_d(&rng) * 5, y + 1);
+    mgenerator_add_node(mgen, x - rng_under(&rng, 5), y - 1);
+    mgenerator_add_node(mgen, x - rng_under(&rng, 5), y + 1);
 
     return 0;
 }
@@ -336,8 +336,8 @@ int up_hall_5(struct mgenerator *mgen, int *map, int w, int h, int x, int y)
 
     mgenerator_add_node(mgen, x, y - 5);
     mgenerator_add_node(mgen, x, y + 1);
-    mgenerator_add_node(mgen, x + 1, y - rng_random_d(&rng) * 5);
-    mgenerator_add_node(mgen, x - 1, y - rng_random_d(&rng) * 5);
+    mgenerator_add_node(mgen, x + 1, y - rng_under(&rng, 5));
+    mgenerator_add_node(mgen, x - 1, y - rng_under(&rng, 5));
 
     return 0;
 }
@@ -363,8 +363,8 @@ int down_hall_5(struct mgenerator *mgen, int *map, int w, int h, int x, int y)
 
     mgenerator_add_node(mgen, x, y + 5);
     mgenerator_add_node(mgen, x, y - 1);
-    mgenerator_add_node(mgen, x + 1, y + rng_random_d(&rng) * 5);
-    mgenerator_add_node(mgen, x - 1, y + rng_random_d(&rng) * 5);
+    mgenerator_add_node(mgen, x + 1, y + rng_under(&rng, 5));
+    mgenerator_add_node(mgen, x - 1, y + rng_under(&rng, 5));
 
     return 0;
 }
@@ -388,19 +388,19 @@ int room_XxX(struct mgenerator *mgen, int *map, int w, int h, int x, int y, int 
         for (iy = y - size2; iy <= y + size2; ++iy)
             map[iy * w + ix] = TFLOOR;
 
-    if (rng_random_d(&rng) * 100 < 40) {
+    if (rng_under(&rng, 100) < 40) {
         map[(y - size2) * w + (x - size2)] = TTABLE;
     }
 
-    if (rng_random_d(&rng) * 100 < 40) {
+    if (rng_under(&rng, 100) < 40) {
         map[(y - size2) * w + (x + size2)] = TTABLE;
     }
 
-    if (rng_random_d(&rng) * 100 < 40) {
+    if (rng_under(&rng, 100) < 40) {
         map[(y + size2) * w + (x - size2)] = TTABLE;
     }
 
-    if (rng_random_d(&rng) * 100 < 40) {
+    if (rng_under(&rng, 100) < 40) {
         map[(y + size2) * w + (x + size2)] = TTABLE;
     }
 
