@@ -103,7 +103,7 @@ typedef struct {
 
 void noise_seed(noise_state *ns, rng_state *st, int type);
 void noise_detail(noise_state *ns, uint32_t octaves, double fallout);
-double noise_generate(noise_state *ns, double x, double y, double z);
+double noise_generate(noise_state *ns, double x, double y, double z, double t);
 
 #ifdef __cplusplus
 }

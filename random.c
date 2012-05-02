@@ -434,32 +434,58 @@ static double lerp(double a, double b, double t)
 
 
 
-static double grad(signed hash, double x, double y, double z)
+static double grad(signed hash, double x, double y, double z, double t)
 {
-    signed h = hash & 15;
-    double u = h < 8 ? x : y;
-    double v = h < 4 ? y : h == 12 || h == 14 ? x : z;
-    return ((h & 0x1) == 0 ? u : -u) + ((h & 0x2) == 0 ? v : -v);
+    signed h = hash & 31;
+    double a = y;
+    double b = z;
+    double c = t;
+    switch (h >> 3) {
+    case 1:
+        a = t;
+        b = x;
+        c = y;
+        break;
+
+    case 2:
+        a = z;
+        b = t;
+        c = x;
+        break;
+
+    case 3:
+        a = y;
+        b = z;
+        c = t;
+        break;
+    }
+    return ((h & 0x4) == 0 ? -a : a) +
+           ((h & 0x2) == 0 ? -b : b) +
+           ((h & 0x1) == 0 ? -c : c);
 }
 
 
 
-static double perlin_noise(uint32_t *p, double x, double y, double z)
+static double perlin_noise(uint32_t *p, double x, double y, double z, double t)
 {
-    double u, v, w;
-    signed X, Y, Z, A, AA, AB, B, BA, BB;
+    signed X, Y, Z, T, A, AA, AB, B, BA, BB;
+    signed AAA, AAB, ABA, ABB, BAA, BAB, BBA, BBB;
+    double a, b, c, d;
 
     X = (signed)floor(x) & 0xff;
     Y = (signed)floor(y) & 0xff;
     Z = (signed)floor(z) & 0xff;
+    T = (signed)floor(t) & 0xff;
 
     x -= (signed)floor(x);
     y -= (signed)floor(y);
     z -= (signed)floor(z);
+    t -= (signed)floor(t);
 
-    u = fade(x);
-    v = fade(y);
-    w = fade(z);
+    a = fade(x);
+    b = fade(y);
+    c = fade(z);
+    d = fade(t);
 
     A  = p[X    ] + Y;
     AA = p[A    ] + Z;
@@ -467,22 +493,46 @@ static double perlin_noise(uint32_t *p, double x, double y, double z)
     B  = p[X + 1] + Y;
     BA = p[B    ] + Z;
     BB = p[B + 1] + Z;
+    AAA = p[AA    ] + T;
+    AAB = p[AA + 1] + T;
+    ABA = p[AB    ] + T;
+    ABB = p[AB + 1] + T;
+    BAA = p[BA    ] + T;
+    BAB = p[BA + 1] + T;
+    BBA = p[BB    ] + T;
+    BBB = p[BB + 1] + T;
 
-    return lerp(lerp(lerp(grad(p[AA    ], x    , y    , z    ),
-                          grad(p[BA    ], x - 1, y    , z    ),
-                          u),
-                     lerp(grad(p[AB    ], x    , y - 1, z    ),
-                          grad(p[BB    ], x - 1, y - 1, z    ),
-                          u),
-                     v),
-                lerp(lerp(grad(p[AA + 1], x    , y    , z - 1),
-                          grad(p[BA + 1], x - 1, y    , z - 1),
-                          u),
-                     lerp(grad(p[AB + 1], x    , y - 1, z - 1),
-                          grad(p[BB + 1], x - 1, y - 1, z - 1),
-                          u),
-                     v),
-                w);
+    return lerp(lerp(lerp(lerp(grad(p[AAA    ], x    , y    , z    , t    ),
+                               grad(p[BAA    ], x - 1, y    , z    , t    ),
+                               a),
+                          lerp(grad(p[ABA    ], x    , y - 1, z    , t    ),
+                               grad(p[BBA    ], x - 1, y - 1, z    , t    ),
+                               a),
+                          b),
+                     lerp(lerp(grad(p[AAB    ], x    , y    , z - 1, t    ),
+                               grad(p[BAB    ], x - 1, y    , z - 1, t    ),
+                               a),
+                          lerp(grad(p[ABB    ], x    , y - 1, z - 1, t    ),
+                               grad(p[BBB    ], x - 1, y - 1, z - 1, t    ),
+                               a),
+                          b),
+                     c),
+                lerp(lerp(lerp(grad(p[AAA + 1], x    , y    , z    , t + 1),
+                               grad(p[BAA + 1], x - 1, y    , z    , t + 1),
+                               a),
+                          lerp(grad(p[ABA + 1], x    , y - 1, z    , t + 1),
+                               grad(p[BBA + 1], x - 1, y - 1, z    , t + 1),
+                               a),
+                          b),
+                     lerp(lerp(grad(p[AAB + 1], x    , y    , z - 1, t + 1),
+                               grad(p[BAB + 1], x - 1, y    , z - 1, t + 1),
+                               a),
+                          lerp(grad(p[ABB + 1], x    , y - 1, z - 1, t + 1),
+                               grad(p[BBB + 1], x - 1, y - 1, z - 1, t + 1),
+                               a),
+                          b),
+                     c),
+                d);
 }
 
 /******************************************************************************\
@@ -527,7 +577,7 @@ void noise_detail(noise_state *ns, uint32_t octaves, double fallout)
 
 
 
-double noise_generate(noise_state *ns, double x, double y, double z)
+double noise_generate(noise_state *ns, double x, double y, double z, double t)
 {
     double n, effect, k;
     uint32_t i;
@@ -537,7 +587,7 @@ double noise_generate(noise_state *ns, double x, double y, double z)
     k = 1;
     for (i = 0; i < ns->octaves; ++i) {
         effect *= ns->fallout;
-        n += effect * (1 + perlin_noise(ns->state.p, k * x, k * y, k * z)) / 2;
+        n += effect * (1 + perlin_noise(ns->state.p, k * x, k * y, k * z, k * t)) / 2;
         k *= 2;
     }
 
