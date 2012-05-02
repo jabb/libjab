@@ -93,7 +93,7 @@ int room_3x3(struct mgenerator *mgen, int *map, int w, int h, int x, int y);
 int diamond_7(struct mgenerator *mgen, int *map, int w, int h, int x, int y);
 int treasure_3x3(struct mgenerator *mgen, int *map, int w, int h, int x, int y);
 
-cmwc_state rng;
+rng_state rng;
 
 int main(int argc, char *argv[])
 {
@@ -105,7 +105,7 @@ int main(int argc, char *argv[])
     memset(&world, 0, sizeof(world));
     clear_world(&world, TWALL);
 
-    cmwc_seed(&rng, time(NULL));
+    rng_seed(&rng, time(NULL), RNG_CMWC);
     mgenerator_open(&mgen);
     mgenerator_add_plan(&mgen, left_hall_5, 4);
     mgenerator_add_plan(&mgen, right_hall_5, 4);
@@ -117,7 +117,7 @@ int main(int argc, char *argv[])
     mgenerator_add_plan(&mgen, diamond_7, 4);
     mgenerator_add_plan(&mgen, treasure_3x3, 4);
 
-    mgenerator_add_node(&mgen, cmwc_random_d(&rng) * MWIDTH, cmwc_random_d(&rng) * MHEIGHT);
+    mgenerator_add_node(&mgen, rng_random_d(&rng) * MWIDTH, rng_random_d(&rng) * MHEIGHT);
     mgenerator_generate(&mgen, (int *)world.map, MWIDTH, MHEIGHT, 0x7fffffff);
 
     border_map(&world, TWALL);
@@ -132,7 +132,7 @@ int main(int argc, char *argv[])
         if (at_peek('g')) {
             clear_world(&world, TWALL);
 
-            mgenerator_add_node(&mgen, cmwc_random_d(&rng) * MWIDTH, cmwc_random_d(&rng) * MHEIGHT);
+            mgenerator_add_node(&mgen, rng_random_d(&rng) * MWIDTH, rng_random_d(&rng) * MHEIGHT);
             mgenerator_generate(&mgen, (int *)world.map, MWIDTH, MHEIGHT, 0x7fffffff);
 
             border_map(&world, TWALL);
@@ -282,8 +282,8 @@ int left_hall_5(struct mgenerator *mgen, int *map, int w, int h, int x, int y)
 
     mgenerator_add_node(mgen, x - 1, y);
     mgenerator_add_node(mgen, x + 5, y);
-    mgenerator_add_node(mgen, x + cmwc_random_d(&rng) * 5, y - 1);
-    mgenerator_add_node(mgen, x + cmwc_random_d(&rng) * 5, y + 1);
+    mgenerator_add_node(mgen, x + rng_random_d(&rng) * 5, y - 1);
+    mgenerator_add_node(mgen, x + rng_random_d(&rng) * 5, y + 1);
 
     return 0;
 }
@@ -309,8 +309,8 @@ int right_hall_5(struct mgenerator *mgen, int *map, int w, int h, int x, int y)
 
     mgenerator_add_node(mgen, x - 5, y);
     mgenerator_add_node(mgen, x + 1, y);
-    mgenerator_add_node(mgen, x - cmwc_random_d(&rng) * 5, y - 1);
-    mgenerator_add_node(mgen, x - cmwc_random_d(&rng) * 5, y + 1);
+    mgenerator_add_node(mgen, x - rng_random_d(&rng) * 5, y - 1);
+    mgenerator_add_node(mgen, x - rng_random_d(&rng) * 5, y + 1);
 
     return 0;
 }
@@ -336,8 +336,8 @@ int up_hall_5(struct mgenerator *mgen, int *map, int w, int h, int x, int y)
 
     mgenerator_add_node(mgen, x, y - 5);
     mgenerator_add_node(mgen, x, y + 1);
-    mgenerator_add_node(mgen, x + 1, y - cmwc_random_d(&rng) * 5);
-    mgenerator_add_node(mgen, x - 1, y - cmwc_random_d(&rng) * 5);
+    mgenerator_add_node(mgen, x + 1, y - rng_random_d(&rng) * 5);
+    mgenerator_add_node(mgen, x - 1, y - rng_random_d(&rng) * 5);
 
     return 0;
 }
@@ -363,8 +363,8 @@ int down_hall_5(struct mgenerator *mgen, int *map, int w, int h, int x, int y)
 
     mgenerator_add_node(mgen, x, y + 5);
     mgenerator_add_node(mgen, x, y - 1);
-    mgenerator_add_node(mgen, x + 1, y + cmwc_random_d(&rng) * 5);
-    mgenerator_add_node(mgen, x - 1, y + cmwc_random_d(&rng) * 5);
+    mgenerator_add_node(mgen, x + 1, y + rng_random_d(&rng) * 5);
+    mgenerator_add_node(mgen, x - 1, y + rng_random_d(&rng) * 5);
 
     return 0;
 }
@@ -388,19 +388,19 @@ int room_XxX(struct mgenerator *mgen, int *map, int w, int h, int x, int y, int 
         for (iy = y - size2; iy <= y + size2; ++iy)
             map[iy * w + ix] = TFLOOR;
 
-    if (cmwc_random_d(&rng) * 100 < 40) {
+    if (rng_random_d(&rng) * 100 < 40) {
         map[(y - size2) * w + (x - size2)] = TTABLE;
     }
 
-    if (cmwc_random_d(&rng) * 100 < 40) {
+    if (rng_random_d(&rng) * 100 < 40) {
         map[(y - size2) * w + (x + size2)] = TTABLE;
     }
 
-    if (cmwc_random_d(&rng) * 100 < 40) {
+    if (rng_random_d(&rng) * 100 < 40) {
         map[(y + size2) * w + (x - size2)] = TTABLE;
     }
 
-    if (cmwc_random_d(&rng) * 100 < 40) {
+    if (rng_random_d(&rng) * 100 < 40) {
         map[(y + size2) * w + (x + size2)] = TTABLE;
     }
 

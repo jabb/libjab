@@ -57,7 +57,7 @@ Mersenne Twister
 
 
 
-void mt_seed(mt19937_state *st, unsigned s)
+static void mt_seed(mt19937_state *st, unsigned s)
 {
     st->mt[0] = s & 0xffffffffU;
     for (st->mti = 1; st->mti < N; st->mti++)
@@ -66,7 +66,7 @@ void mt_seed(mt19937_state *st, unsigned s)
 
 
 
-unsigned mt_random_u(mt19937_state *st)
+static unsigned mt_random(mt19937_state *st)
 {
     unsigned mag01[2] = {0x0, MATRIX_A};
     unsigned y;
@@ -104,7 +104,7 @@ Carry Multiply with Carry
 
 
 
-void cmwc_seed(cmwc_state *st, unsigned seed)
+static void cmwc_seed(cmwc_state *st, unsigned seed)
 {
     unsigned i;
 
@@ -118,7 +118,7 @@ void cmwc_seed(cmwc_state *st, unsigned seed)
 
 
 
-unsigned cmwc_random_u(cmwc_state *st)
+static unsigned cmwc_random(cmwc_state *st)
 {
     unsigned th, tl, q, qh, ql, a = 18782;
     unsigned x, r = 0xfffffffe;
@@ -144,8 +144,40 @@ unsigned cmwc_random_u(cmwc_state *st)
 
 
 
-double cmwc_random_d(cmwc_state *st)
+void rng_seed(rng_state *st, unsigned s, unsigned type)
 {
-    return cmwc_random_u(st) * 2.3283064365386963e-10;
+    st->type = type;
+
+    switch (st->type) {
+    case RNG_MT19937:
+        mt_seed(&st->state.mt19937, s);
+        break;
+
+    case RNG_CMWC:
+        /* Fallthrough. */
+    default:
+        cmwc_seed(&st->state.cmwc, s);
+        break;
+    }
+}
+
+unsigned rng_random_u(rng_state *st)
+{
+    switch (st->type) {
+    case RNG_MT19937:
+        return mt_random(&st->state.mt19937);
+
+    case RNG_CMWC:
+        return cmwc_random(&st->state.cmwc);
+
+    default:
+        return 0;
+    }
+
+}
+
+double rng_random_d(rng_state *st)
+{
+    return rng_random_u(st) * 2.3283064365386963e-10;
 }
 
