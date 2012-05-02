@@ -238,10 +238,8 @@ static void xor128_seed(xor128_state *st, uint32_t seed)
 
     srand(seed);
     for (i = 0; i < XOR128_K; ++i) {
-        st->status[i] = rand();
+        st->q[i] = rand();
     }
-    st->v = 5783321;
-    st->d = 6615241;
 }
 
 
@@ -249,12 +247,11 @@ static void xor128_seed(xor128_state *st, uint32_t seed)
 static uint32_t xor128_random(xor128_state *st)
 {
     uint32_t t;
-    t = (st->status[0] ^ (st->status[0] >> 2));
-    st->status[0] = st->status[1];
-    st->status[2] = st->status[3];
-    st->status[3] = st->v;
-    st->v = (st->v ^ (st->v << 4)) ^ (t ^ (t << 1));
-    return (st->d += 362437) + st->v;
+    t = (st->q[0] ^ (st->q[0] << 11));
+    st->q[0] = st->q[1];
+    st->q[1] = st->q[2];
+    st->q[2] = st->q[3];
+    return st->q[3] = st->q[3] ^ (st->q[3] >> 19) ^ (t ^ (t >> 8));
 }
 
 /******************************************************************************\

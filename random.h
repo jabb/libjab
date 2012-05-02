@@ -32,6 +32,7 @@
 extern "C" {
 #endif
 
+/* Slow. Period = 2^19937 - 1. */
 enum {MT19937_K = 624};
 
 typedef struct {
@@ -39,6 +40,7 @@ typedef struct {
     int32_t     mti;
 } mt19937_state;
 
+/* Fast. Period = 2^127 - 1. */
 enum {TINYMT_K = 4};
 
 typedef struct {
@@ -48,14 +50,14 @@ typedef struct {
     uint32_t tmat;
 } tinymt_state;
 
+/* Very Fast. Period = 2^128 - 1. */
 enum {XOR128_K = 4};
 
 typedef struct {
-    uint32_t status[XOR128_K];
-    uint32_t v;
-    uint32_t d;
+    uint32_t q[XOR128_K];
 } xor128_state;
 
+/* Fast. Period ~= 2^131104. */
 enum {CMWC_K = 4096};
 
 typedef struct {
