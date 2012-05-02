@@ -517,18 +517,18 @@ static double perlin_noise(uint32_t *p, double x, double y, double z, double t)
                                a),
                           b),
                      c),
-                lerp(lerp(lerp(grad(p[AAA + 1], x    , y    , z    , t + 1),
-                               grad(p[BAA + 1], x - 1, y    , z    , t + 1),
+                lerp(lerp(lerp(grad(p[AAA + 1], x    , y    , z    , t - 1),
+                               grad(p[BAA + 1], x - 1, y    , z    , t - 1),
                                a),
-                          lerp(grad(p[ABA + 1], x    , y - 1, z    , t + 1),
-                               grad(p[BBA + 1], x - 1, y - 1, z    , t + 1),
+                          lerp(grad(p[ABA + 1], x    , y - 1, z    , t - 1),
+                               grad(p[BBA + 1], x - 1, y - 1, z    , t - 1),
                                a),
                           b),
-                     lerp(lerp(grad(p[AAB + 1], x    , y    , z - 1, t + 1),
-                               grad(p[BAB + 1], x - 1, y    , z - 1, t + 1),
+                     lerp(lerp(grad(p[AAB + 1], x    , y    , z - 1, t - 1),
+                               grad(p[BAB + 1], x - 1, y    , z - 1, t - 1),
                                a),
-                          lerp(grad(p[ABB + 1], x    , y - 1, z - 1, t + 1),
-                               grad(p[BBB + 1], x - 1, y - 1, z - 1, t + 1),
+                          lerp(grad(p[ABB + 1], x    , y - 1, z - 1, t - 1),
+                               grad(p[BBB + 1], x - 1, y - 1, z - 1, t - 1),
                                a),
                           b),
                      c),
@@ -544,6 +544,13 @@ Noise
 void noise_seed(noise_state *ns, rng_state *st, int type)
 {
     uint32_t i, j, t;
+    rng_state backup;
+    rng_state *rng = st;
+
+    if (!st) {
+        rng_seed(&backup, 12345, RNG_XOR128);
+        rng = &backup;
+    }
 
     ns->type = type;
     ns->octaves = 4;
@@ -556,7 +563,7 @@ void noise_seed(noise_state *ns, rng_state *st, int type)
         for (i = 0; i < 256; ++i)
             ns->state.p[i] = perlin[i];
         for (i = 0; i < 256; ++i) {
-            j = rng_u32(st) & 255;
+            j = rng_u32(rng) & 255;
             t = ns->state.p[j];
             ns->state.p[j] = perlin[i];
             ns->state.p[i] = t;
@@ -587,7 +594,10 @@ double noise_generate(noise_state *ns, double x, double y, double z, double t)
     k = 1;
     for (i = 0; i < ns->octaves; ++i) {
         effect *= ns->fallout;
-        n += effect * (1 + perlin_noise(ns->state.p, k * x, k * y, k * z, k * t)) / 2;
+        n += effect * (1 + perlin_noise(ns->state.p, k * x,
+                                                     k * y,
+                                                     k * z,
+                                                     k * t)) / 2;
         k *= 2;
     }
 
