@@ -90,6 +90,21 @@ double rng_between(rng_state *st, int32_t min, int32_t max);
 /* min to max */
 int32_t rng_range(rng_state *st, int32_t min, int32_t max);
 
+enum {NOISE_PERLIN};
+
+typedef struct {
+    int type;
+    union {
+        uint32_t p[512];
+    } state;
+    uint32_t octaves;
+    double fallout;
+} noise_state;
+
+void noise_seed(noise_state *ns, rng_state *st, int type);
+void noise_detail(noise_state *ns, uint32_t octaves, double fallout);
+double noise_generate(noise_state *ns, double x, double y, double z);
+
 #ifdef __cplusplus
 }
 #endif
