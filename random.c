@@ -231,7 +231,7 @@ static uint32_t tinymt_random(tinymt_state *st) {
 }
 
 /******************************************************************************\
-Carry Multiply with Carry
+Complementary Multiply with Carry
 \******************************************************************************/
 
 
