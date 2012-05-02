@@ -427,7 +427,7 @@ static double fade(double t)
 
 
 
-static double lerp(double t, double a, double b)
+static double lerp(double a, double b, double t)
 {
     return a + t * (b - a);
 }
@@ -468,15 +468,26 @@ static double perlin_noise(uint32_t *p, double x, double y, double z)
     BA = p[B    ] + Z;
     BB = p[B + 1] + Z;
 
-    return lerp(w, lerp(v, lerp(u, grad(p[AA    ], x    , y    , z    ),
-                                   grad(p[BA    ], x - 1, y    , z    )),
-                           lerp(u, grad(p[AB    ], x    , y - 1, z    ),
-                                   grad(p[BB    ], x - 1, y - 1, z    ))),
-                   lerp(v, lerp(u, grad(p[AA + 1], x    , y    , z - 1),
-                                   grad(p[BA + 1], x - 1, y    , z - 1)),
-                           lerp(u, grad(p[AB + 1], x    , y - 1, z - 1),
-                                   grad(p[BB + 1], x - 1, y - 1, z - 1))));
+    return lerp(lerp(lerp(grad(p[AA    ], x    , y    , z    ),
+                          grad(p[BA    ], x - 1, y    , z    ),
+                          u),
+                     lerp(grad(p[AB    ], x    , y - 1, z    ),
+                          grad(p[BB    ], x - 1, y - 1, z    ),
+                          u),
+                     v),
+                lerp(lerp(grad(p[AA + 1], x    , y    , z - 1),
+                          grad(p[BA + 1], x - 1, y    , z - 1),
+                          u),
+                     lerp(grad(p[AB + 1], x    , y - 1, z - 1),
+                          grad(p[BB + 1], x - 1, y - 1, z - 1),
+                          u),
+                     v),
+                w);
 }
+
+/******************************************************************************\
+Noise
+\******************************************************************************/
 
 
 
