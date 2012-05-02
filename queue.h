@@ -1,4 +1,4 @@
-/* Copyright (c) 2009, Michael Patraw
+/* Copyright (c) 2012, Michael Patraw
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

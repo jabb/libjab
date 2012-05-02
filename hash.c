@@ -1,4 +1,4 @@
-/* Copyright (c) 2009, Michael Patraw
+/* Copyright (c) 2012, Michael Patraw
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,12 +32,12 @@ static unsigned hashstr(const char *str, unsigned size)
 {
     unsigned h = 0;
     size_t i, n = strlen(str);
-    
+
     for (i = 0; i < n; ++i) {
         h *= 31;
         h += str[i];
     }
-    
+
     return h % size;
 }
 
@@ -60,10 +60,10 @@ int hash_open(struct hash *hash, unsigned siz)
     if (!hash->buckets)
         return -1;
     hash->max_size = siz;
-    
+
     for (i = 0; i < siz; ++i)
         darray_open(&hash->buckets[i], 3);
-    
+
     return 0;
 }
 
@@ -71,7 +71,7 @@ void hash_close(struct hash *hash, void (*freer) (void *))
 {
     unsigned i, j;
     struct hash_bucket *iter;
-    
+
     for (i = 0; i < hash->max_size; ++i) {
         for (j = 0; j < hash->buckets[i].length; ++j) {
             darray_at(&hash->buckets[i], (void **)&iter, j);
@@ -81,7 +81,7 @@ void hash_close(struct hash *hash, void (*freer) (void *))
         }
         darray_close(&hash->buckets[i], free);
     }
-    
+
     free(hash->buckets);
 }
 
@@ -91,16 +91,16 @@ int hash_insert(struct hash *hash, const char *key, void *mem, void (*freer) (vo
     struct hash_bucket *bucket = malloc(sizeof *bucket), *iter;
     if (!bucket)
         return -1;
-    
+
     bucket->key = string_dup(key);
     if (!bucket->key) {
         free(bucket);
         return -1;
     }
     bucket->mem = mem;
-    
+
     h = hashstr(key, hash->max_size);
-    
+
     for (i = 0; i < hash->buckets[h].length; ++i) {
         darray_at(&hash->buckets[h], (void **)&iter, i);
         if (!strcmp(iter->key, bucket->key)) {
@@ -110,9 +110,9 @@ int hash_insert(struct hash *hash, const char *key, void *mem, void (*freer) (vo
             return 0;
         }
     }
-    
+
     darray_push_back(&hash->buckets[h], bucket);
-    
+
     return 0;
 }
 
@@ -120,9 +120,9 @@ int hash_exists(struct hash *hash, const char *key)
 {
     unsigned i, h;
     struct hash_bucket *iter;
-    
+
     h = hashstr(key, hash->max_size);
-    
+
     for (i = 0; i < hash->buckets[h].length; ++i) {
         darray_at(&hash->buckets[h], (void **)&iter, i);
         if (!strcmp(iter->key, key)) {
@@ -136,9 +136,9 @@ void hash_remove(struct hash *hash, const char *key, void (*freer) (void *))
 {
     unsigned i, h;
     struct hash_bucket *iter;
-    
+
     h = hashstr(key, hash->max_size);
-    
+
     for (i = 0; i < hash->buckets[h].length; ++i) {
         darray_at(&hash->buckets[h], (void **)&iter, i);
         if (!strcmp(iter->key, key)) {
@@ -152,9 +152,9 @@ void hash_at(struct hash *hash, const char *key, void **mem)
 {
     unsigned i, h;
     struct hash_bucket *iter;
-    
+
     h = hashstr(key, hash->max_size);
-    
+
     for (i = 0; i < hash->buckets[h].length; ++i) {
         darray_at(&hash->buckets[h], (void **)&iter, i);
         if (!strcmp(iter->key, key)) {
@@ -162,7 +162,7 @@ void hash_at(struct hash *hash, const char *key, void **mem)
             return;
         }
     }
-    
+
     *mem = NULL;
 }
 
@@ -170,7 +170,7 @@ void hash_keys(struct hash *hash, struct darray *arr)
 {
     unsigned i, j;
     struct hash_bucket *iter;
-    
+
     for (i = 0; i < hash->max_size; ++i) {
         for (j = 0; j < hash->buckets[i].length; ++j) {
             darray_at(&hash->buckets[i], (void **)&iter, j);
@@ -183,7 +183,7 @@ void hash_values(struct hash *hash, struct darray *arr)
 {
     unsigned i, j;
     struct hash_bucket *iter;
-    
+
     for (i = 0; i < hash->max_size; ++i) {
         for (j = 0; j < hash->buckets[i].length; ++j) {
             darray_at(&hash->buckets[i], (void **)&iter, j);

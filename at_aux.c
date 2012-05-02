@@ -1,4 +1,4 @@
-/* Copyright (c) 2009, Michael Patraw
+/* Copyright (c) 2012, Michael Patraw
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,7 +30,7 @@
 #define N 0x964B00
 
 unsigned at_aux_sym[AT_AUX_SYM_COUNT][AT_AUX_FWIDTH * AT_AUX_FHEIGHT] = {
-    
+
     {
     X, X, X, X, X, _,
     X, _, _, _, X, _,

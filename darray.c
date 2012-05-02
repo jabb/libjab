@@ -1,4 +1,4 @@
-/* Copyright (c) 2009, Michael Patraw
+/* Copyright (c) 2012, Michael Patraw
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -55,7 +55,7 @@ int darray_push_back(struct darray *arr, void *mem)
         arr->mem = tmp;
         arr->allocd *= 2;
     }
-    
+
     arr->mem[arr->length++] = mem;
     return 0;
 }
@@ -79,7 +79,7 @@ int darray_insert(struct darray *arr, void *mem, int pos)
         arr->mem = tmp;
         arr->allocd *= 2;
     }
-    
+
     memmove(&arr->mem[pos + 1], &arr->mem[pos], sizeof *arr->mem * (arr->length - pos));
     arr->mem[pos] = mem;
     arr->length++;
@@ -90,7 +90,7 @@ void darray_remove(struct darray *arr, void (*freer) (void *), int pos)
 {
     if (freer)
         freer(arr->mem[pos]);
-    
+
     arr->length--;
     memmove(&arr->mem[pos], &arr->mem[pos + 1], sizeof *arr->mem * (arr->length - pos));
 }

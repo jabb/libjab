@@ -1,4 +1,4 @@
-/* Copyright (c) 2009, Michael Patraw
+/* Copyright (c) 2012, Michael Patraw
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,8 +30,26 @@
 extern "C" {
 #endif
 
-unsigned mtseed(unsigned s);
-double mtrandom(void);
+enum {MT19937_K = 624};
+
+typedef struct {
+    unsigned    mt[MT19937_K];
+    signed      mti;
+} mt19937_state;
+
+void mt_seed(mt19937_state *st, unsigned s);
+unsigned mt_random(mt19937_state *st);
+
+enum {CMWC_K = 4096};
+
+typedef struct {
+    unsigned q[CMWC_K];
+    unsigned c;
+    unsigned i;
+} cmwc_state;
+
+void cmwc_seed(cmwc_state *st, unsigned s);
+unsigned cmwc_random(cmwc_state *st);
 
 #ifdef __cplusplus
 }

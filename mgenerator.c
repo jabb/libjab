@@ -1,4 +1,4 @@
-/* Copyright (c) 2009, Michael Patraw
+/* Copyright (c) 2012, Michael Patraw
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -132,7 +132,7 @@ int mgenerator_generate(struct mgenerator *mgen, int *map, int w, int h, int lim
     struct plan_and_weight *selected;
     struct plan_and_weight *tried;
     struct darray tries;
-    
+
     darray_open(&tries, 16);
 
     while (mgen->nodes->length) {
@@ -148,13 +148,13 @@ int mgenerator_generate(struct mgenerator *mgen, int *map, int w, int h, int lim
                     if (tried == selected)
                         found = 1;
                 }
-                
+
                 if (found)
                     selected = select_plan(mgen->plans);
                 else
                     break;
             }
-            
+
             darray_push_back(&tries, selected);
 
             if (selected->plan(mgen, map, w, h, p->x, p->y) == 0) {
@@ -164,14 +164,14 @@ int mgenerator_generate(struct mgenerator *mgen, int *map, int w, int h, int lim
         }
 
         darray_remove(mgen->nodes, free, r);
-        
+
         while (tries.length)
             darray_remove(&tries, NULL, tries.length - 1);
 
         if (successes >= lim)
             break;
     }
-    
+
     darray_close(&tries, NULL);
 
     while (mgen->nodes->length)
