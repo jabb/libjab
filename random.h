@@ -39,8 +39,10 @@ typedef struct {
     int32_t     mti;
 } mt19937_state;
 
+enum {TINYMT_K = 4};
+
 typedef struct {
-    uint32_t status[4];
+    uint32_t status[TINYMT_K];
     uint32_t mat1;
     uint32_t mat2;
     uint32_t tmat;

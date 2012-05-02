@@ -57,9 +57,9 @@ Mersenne Twister
 
 
 
-static void mt_seed(mt19937_state *st, uint32_t s)
+static void mt_seed(mt19937_state *st, uint32_t seed)
 {
-    st->mt[0] = s & 0xffffffffU;
+    st->mt[0] = seed & 0xffffffffU;
     for (st->mti = 1; st->mti < N; st->mti++)
         st->mt[st->mti] = (69069 * st->mt[st->mti - 1]) & 0xffffffffU;
 }
@@ -97,6 +97,138 @@ static uint32_t mt_random(mt19937_state *st)
 }
 
 
+
+/******************************************************************************\
+Tiny Mersenne Twister
+\******************************************************************************/
+
+
+
+/*
+Copyright (c) 2011 Mutsuo Saito, Makoto Matsumoto, Hiroshima
+University and The University of Tokyo. All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are
+met:
+
+    * Redistributions of source code must retain the above copyright
+      notice, this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above
+      copyright notice, this list of conditions and the following
+      disclaimer in the documentation and/or other materials provided
+      with the distribution.
+    * Neither the name of the Hiroshima University nor the names of
+      its contributors may be used to endorse or promote products
+      derived from this software without specific prior written
+      permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
+
+
+#define TINYMT32_MEXP 127
+#define TINYMT32_SH0 1
+#define TINYMT32_SH1 10
+#define TINYMT32_SH8 8
+#define TINYMT32_MASK UINT32_C(0x7fffffff)
+#define TINYMT32_MUL (1.0f / 4294967296.0f)
+
+
+
+#define MIN_LOOP 8
+#define PRE_LOOP 8
+
+
+
+static void period_certification(tinymt_state *st) {
+    if ((st->status[0] & TINYMT32_MASK) == 0 &&
+        st->status[1] == 0 &&
+        st->status[2] == 0 &&
+        st->status[3] == 0) {
+
+        st->status[0] = 'T';
+        st->status[1] = 'I';
+        st->status[2] = 'N';
+        st->status[3] = 'Y';
+    }
+}
+
+
+
+static void tinymt_next_state(tinymt_state *st)
+{
+    uint32_t x;
+    uint32_t y;
+
+    y = st->status[3];
+    x = (st->status[0] & TINYMT32_MASK)
+    ^ st->status[1]
+    ^ st->status[2];
+    x ^= (x << TINYMT32_SH0);
+    y ^= (y >> TINYMT32_SH0) ^ x;
+    st->status[0] = st->status[1];
+    st->status[1] = st->status[2];
+    st->status[2] = x ^ (y << TINYMT32_SH1);
+    st->status[3] = y;
+    st->status[1] ^= -((int32_t)(y & 1)) & st->mat1;
+    st->status[2] ^= -((int32_t)(y & 1)) & st->mat2;
+}
+
+
+
+static void tinymt_seed(tinymt_state *st, uint32_t seed)
+{
+    int i;
+    st->status[0] = seed;
+    st->status[1] = st->mat1;
+    st->status[2] = st->mat2;
+    st->status[3] = st->tmat;
+    for (i = 1; i < MIN_LOOP; i++) {
+        st->status[i & 3] ^= i + UINT32_C(1812433253) *
+                             (st->status[(i - 1) & 3] ^
+                             (st->status[(i - 1) & 3] >> 30));
+    }
+    period_certification(st);
+    for (i = 0; i < PRE_LOOP; i++) {
+        tinymt_next_state(st);
+    }
+}
+
+
+
+static uint32_t tinymt_temper(tinymt_state *st) {
+    uint32_t t0, t1;
+    t0 = st->status[3];
+#if defined(LINEARITY_CHECK)
+    t1 = st->status[0]
+    ^ (st->status[2] >> TINYMT32_SH8);
+#else
+    t1 = st->status[0]
+    + (st->status[2] >> TINYMT32_SH8);
+#endif
+    t0 ^= t1;
+    t0 ^= -((int32_t)(t1 & 1)) & st->tmat;
+    return t0;
+}
+
+
+
+static uint32_t tinymt_random(tinymt_state *st) {
+    tinymt_next_state(st);
+    return tinymt_temper(st);
+}
 
 /******************************************************************************\
 Carry Multiply with Carry
@@ -150,19 +282,23 @@ Generic RNG
 
 
 
-void rng_seed(rng_state *st, uint32_t s, int type)
+void rng_seed(rng_state *st, uint32_t seed, int type)
 {
     st->type = type;
 
     switch (st->type) {
     case RNG_MT19937:
-        mt_seed(&st->state.mt19937, s);
+        mt_seed(&st->state.mt19937, seed);
+        break;
+
+    case RNG_TINYMT:
+        tinymt_seed(&st->state.tinymt, seed);
         break;
 
     case RNG_CMWC:
         /* Fallthrough. */
     default:
-        cmwc_seed(&st->state.cmwc, s);
+        cmwc_seed(&st->state.cmwc, seed);
         break;
     }
 }
@@ -172,6 +308,9 @@ uint32_t rng_random_u(rng_state *st)
     switch (st->type) {
     case RNG_MT19937:
         return mt_random(&st->state.mt19937);
+
+    case RNG_TINYMT:
+        return tinymt_random(&st->state.tinymt);
 
     case RNG_CMWC:
         return cmwc_random(&st->state.cmwc);
