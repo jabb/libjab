@@ -3,8 +3,6 @@
 
 #include <stdlib.h>
 
-
-
 /******************************************************************************\
 Mersenne Twister
 \******************************************************************************/
@@ -95,8 +93,6 @@ static uint32_t mt_random(mt19937_state *st)
 
     return y;
 }
-
-
 
 /******************************************************************************\
 Tiny Mersenne Twister
@@ -231,6 +227,37 @@ static uint32_t tinymt_random(tinymt_state *st) {
 }
 
 /******************************************************************************\
+Xor128
+\******************************************************************************/
+
+
+
+static void xor128_seed(xor128_state *st, uint32_t seed)
+{
+    int i;
+
+    srand(seed);
+    for (i = 0; i < XOR128_K; ++i) {
+        st->status[i] = rand();
+    }
+    st->v = 5783321;
+    st->d = 6615241;
+}
+
+
+
+static uint32_t xor128_random(xor128_state *st)
+{
+    uint32_t t;
+    t = (st->status[0] ^ (st->status[0] >> 2));
+    st->status[0] = st->status[1];
+    st->status[2] = st->status[3];
+    st->status[3] = st->v;
+    st->v = (st->v ^ (st->v << 4)) ^ (t ^ (t << 1));
+    return (st->d += 362437) + st->v;
+}
+
+/******************************************************************************\
 Complementary Multiply with Carry
 \******************************************************************************/
 
@@ -238,7 +265,7 @@ Complementary Multiply with Carry
 
 static void cmwc_seed(cmwc_state *st, uint32_t seed)
 {
-    uint32_t i;
+    int i;
 
     srand(seed);
     for (i = 0; i < CMWC_K; ++i) {
@@ -295,6 +322,10 @@ void rng_seed(rng_state *st, uint32_t seed, int type)
         tinymt_seed(&st->state.tinymt, seed);
         break;
 
+    case RNG_XOR128:
+        xor128_seed(&st->state.xor128, seed);
+        break;
+
     case RNG_CMWC:
         /* Fallthrough. */
     default:
@@ -313,6 +344,9 @@ uint32_t rng_random_u(rng_state *st)
 
     case RNG_TINYMT:
         return tinymt_random(&st->state.tinymt);
+
+    case RNG_XOR128:
+        return xor128_random(&st->state.xor128);
 
     case RNG_CMWC:
         return cmwc_random(&st->state.cmwc);

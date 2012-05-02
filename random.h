@@ -48,6 +48,14 @@ typedef struct {
     uint32_t tmat;
 } tinymt_state;
 
+enum {XOR128_K = 4};
+
+typedef struct {
+    uint32_t status[XOR128_K];
+    uint32_t v;
+    uint32_t d;
+} xor128_state;
+
 enum {CMWC_K = 4096};
 
 typedef struct {
@@ -56,13 +64,14 @@ typedef struct {
     uint32_t i;
 } cmwc_state;
 
-enum {RNG_MT19937, RNG_TINYMT, RNG_CMWC};
+enum {RNG_MT19937, RNG_TINYMT, RNG_XOR128, RNG_CMWC};
 
 typedef struct {
     int type;
     union {
         mt19937_state   mt19937;
         tinymt_state    tinymt;
+        xor128_state    xor128;
         cmwc_state      cmwc;
     } state;
 } rng_state;
