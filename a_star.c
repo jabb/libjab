@@ -28,7 +28,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "pqueue.h"
+#include "data_structs.h"
 
 struct a_star_node {
     struct a_star_node *parent;
@@ -91,7 +91,7 @@ int a_star(int x0, int y0, int x1, int y1, int *map, int w, int h, int *path, in
     nodes[y0 * w + x0].x = x0;
     nodes[y0 * w + x0].y = y0;
 
-    pqueue_open(&open, 256);
+    pqueue_init(&open, 256);
     pqueue_push(&open, &nodes[y0 * w + x0], a_star_node_cmp);
 
     while (open.size) {
@@ -148,7 +148,7 @@ int a_star(int x0, int y0, int x1, int y1, int *map, int w, int h, int *path, in
 
 failure:
     free(nodes);
-    pqueue_close(&open, NULL);
+    pqueue_uninit(&open, NULL);
     return ret;
 }
 

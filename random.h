@@ -90,7 +90,7 @@ double rng_between(struct rng_state *st, int32_t min, int32_t max);
 /* min to max */
 int32_t rng_range(struct rng_state *st, int32_t min, int32_t max);
 
-enum {NOISE_SIMPLEX, NOISE_WAVELET, NOISE_PERLIN};
+enum {/*NOISE_SIMPLEX, NOISE_WAVELET, */NOISE_PERLIN};
 
 struct noise_state {
     int type;

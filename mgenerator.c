@@ -27,7 +27,7 @@
 
 #include <stdlib.h>
 
-#include "darray.h"
+#include "data_structs.h"
 #include "random.h"
 
 struct point {
@@ -72,13 +72,13 @@ int mgenerator_open(struct mgenerator *mgen)
         return -1;
     }
 
-    if (darray_open(mgen->nodes, 3) == -1) {
+    if (darray_init(mgen->nodes, 3) == -1) {
         free(mgen->nodes);
         free(mgen->plans);
         return -1;
     }
-    if (darray_open(mgen->plans, 3) == -1) {
-        darray_close(mgen->nodes, free);
+    if (darray_init(mgen->plans, 3) == -1) {
+        darray_uninit(mgen->nodes, free);
         free(mgen->nodes);
         free(mgen->plans);
         return -1;
@@ -89,8 +89,8 @@ int mgenerator_open(struct mgenerator *mgen)
 
 void mgenerator_close(struct mgenerator *mgen)
 {
-    darray_close(mgen->nodes, free);
-    darray_close(mgen->plans, free);
+    darray_uninit(mgen->nodes, free);
+    darray_uninit(mgen->plans, free);
     free(mgen->nodes);
     free(mgen->plans);
 }
@@ -137,7 +137,7 @@ int mgenerator_generate(struct mgenerator *mgen, int *map, int w, int h, int lim
     struct plan_and_weight *tried;
     struct darray tries;
 
-    darray_open(&tries, 16);
+    darray_init(&tries, 16);
 
     while (mgen->nodes->length) {
         r = rng_under(&rng, mgen->nodes->length);
@@ -176,7 +176,7 @@ int mgenerator_generate(struct mgenerator *mgen, int *map, int w, int h, int lim
             break;
     }
 
-    darray_close(&tries, NULL);
+    darray_uninit(&tries, NULL);
 
     while (mgen->nodes->length)
         darray_remove(mgen->nodes, free, mgen->nodes->length - 1);
