@@ -23,26 +23,27 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#include <stdlib.h>
-#include "darray.h"
 #include "mgenerator.h"
+
+#include <stdlib.h>
+
 #include "random.h"
 
-struct point {
+typedef struct {
     int x, y;
-};
+} point_struct;
 
-struct plan_and_weight {
+typedef struct {
     mgenerator_plan *plan;
     int weight;
-};
+} plan_and_weight_struct;
 
 extern rng_state rng;
 
-static struct plan_and_weight *select_plan(struct darray *plans)
+static plan_and_weight_struct *select_plan(darray_type *plans)
 {
     unsigned i, r, cap = 0;
-    struct plan_and_weight *tmp;
+    plan_and_weight_struct *tmp;
 
     for (i = 0; i < plans->length; ++i) {
         darray_at(plans, (void **)&tmp, i);
@@ -59,7 +60,7 @@ static struct plan_and_weight *select_plan(struct darray *plans)
     return tmp;
 }
 
-int mgenerator_open(struct mgenerator *mgen)
+int mgenerator_open(mgenerator_type *mgen)
 {
     mgen->nodes = malloc(sizeof *mgen->nodes);
     mgen->plans = malloc(sizeof *mgen->plans);
@@ -85,7 +86,7 @@ int mgenerator_open(struct mgenerator *mgen)
     return 0;
 }
 
-void mgenerator_close(struct mgenerator *mgen)
+void mgenerator_close(mgenerator_type *mgen)
 {
     darray_close(mgen->nodes, free);
     darray_close(mgen->plans, free);
@@ -93,9 +94,9 @@ void mgenerator_close(struct mgenerator *mgen)
     free(mgen->plans);
 }
 
-int mgenerator_add_node(struct mgenerator *mgen, int x, int y)
+int mgenerator_add_node(mgenerator_type *mgen, int x, int y)
 {
-    struct point *p = malloc(sizeof *p);
+    point_struct *p = malloc(sizeof *p);
     if (!p)
         return -1;
     p->x = x;
@@ -109,9 +110,9 @@ int mgenerator_add_node(struct mgenerator *mgen, int x, int y)
     return 0;
 }
 
-int mgenerator_add_plan(struct mgenerator *mgen, mgenerator_plan *plan, int weight)
+int mgenerator_add_plan(mgenerator_type *mgen, mgenerator_plan *plan, int weight)
 {
-    struct plan_and_weight *p = malloc(sizeof *p);
+    plan_and_weight_struct *p = malloc(sizeof *p);
     if (!p)
         return -1;
 
@@ -126,14 +127,14 @@ int mgenerator_add_plan(struct mgenerator *mgen, mgenerator_plan *plan, int weig
     return 0;
 }
 
-int mgenerator_generate(struct mgenerator *mgen, int *map, int w, int h, int lim)
+int mgenerator_generate(mgenerator_type *mgen, int *map, int w, int h, int lim)
 {
     int r, successes = 0, found;
     unsigned i;
-    struct point *p;
-    struct plan_and_weight *selected;
-    struct plan_and_weight *tried;
-    struct darray tries;
+    point_struct *p;
+    plan_and_weight_struct *selected;
+    plan_and_weight_struct *tried;
+    darray_type tries;
 
     darray_open(&tries, 16);
 

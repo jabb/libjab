@@ -23,8 +23,9 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#include <stdlib.h>
 #include "can_see.h"
+
+#include <stdlib.h>
 
 void path_to(int x0, int y0, int x1, int y1, int *path, int sz)
 {

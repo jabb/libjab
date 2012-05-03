@@ -23,10 +23,11 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#include <stdlib.h>
 #include "pqueue.h"
 
-int pqueue_open(struct pqueue *pq, unsigned size)
+#include <stdlib.h>
+
+int pqueue_open(pqueue_type *pq, unsigned size)
 {
     pq->mem = malloc(sizeof *pq->mem * size);
     if (!pq->mem)
@@ -36,7 +37,7 @@ int pqueue_open(struct pqueue *pq, unsigned size)
     return 0;
 }
 
-void pqueue_close(struct pqueue *pq, void (*freer) (void *))
+void pqueue_close(pqueue_type *pq, void (*freer) (void *))
 {
     unsigned i;
     if (freer)
@@ -45,7 +46,7 @@ void pqueue_close(struct pqueue *pq, void (*freer) (void *))
     free(pq->mem);
 }
 
-int pqueue_push(struct pqueue *pq, void *mem, int (*comparitor) (void *, void *))
+int pqueue_push(pqueue_type *pq, void *mem, int (*comparitor) (void *, void *))
 {
     int i;
     void **new_mem;
@@ -65,7 +66,7 @@ int pqueue_push(struct pqueue *pq, void *mem, int (*comparitor) (void *, void *)
     return 0;
 }
 
-void pqueue_pop(struct pqueue *pq, void (*freer) (void *), int (*comparitor) (void *, void *))
+void pqueue_pop(pqueue_type *pq, void (*freer) (void *), int (*comparitor) (void *, void *))
 {
     unsigned i, child;
     void *tofree = pq->mem[1];
@@ -87,7 +88,7 @@ void pqueue_pop(struct pqueue *pq, void (*freer) (void *), int (*comparitor) (vo
     pq->mem[i] = last;
 }
 
-void pqueue_top(struct pqueue *pq, void **mem)
+void pqueue_top(pqueue_type *pq, void **mem)
 {
     *mem = pq->mem[1];
 }

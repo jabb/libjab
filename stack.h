@@ -30,14 +30,14 @@
 extern "C" {
 #endif
 
-struct stack_node;
-struct stack {
+typedef struct stack_node stack_node;
+typedef struct {
     struct stack_node *top;
-};
+} stack_type;
 
-int stack_push(struct stack *s, void *mem);
-void stack_pop(struct stack *s, void (*freer) (void *v));
-void stack_peek(struct stack *s, void **mem);
+int stack_push(stack_type *s, void *mem);
+void stack_pop(stack_type *s, void (*freer) (void *v));
+void stack_peek(stack_type *s, void **mem);
 
 #ifdef __cplusplus
 }

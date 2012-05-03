@@ -30,19 +30,19 @@
 extern "C" {
 #endif
 
-struct darray {
+typedef struct {
     void **mem;
     unsigned length;
     unsigned allocd;
-};
+} darray_type;
 
-int darray_open(struct darray *arr, unsigned size);
-void darray_close(struct darray *arr, void (*freer) (void *));
-int darray_push_back(struct darray *arr, void *mem);
-void darray_pop_back(struct darray *arr, void (*freer) (void *));
-int darray_insert(struct darray *arr, void *mem, int pos);
-void darray_remove(struct darray *arr, void (*freer) (void *), int pos);
-void darray_at(struct darray *arr, void **mem, int pos);
+int darray_open(darray_type *arr, unsigned size);
+void darray_close(darray_type *arr, void (*freer) (void *));
+int darray_push_back(darray_type *arr, void *mem);
+void darray_pop_back(darray_type *arr, void (*freer) (void *));
+int darray_insert(darray_type *arr, void *mem, int pos);
+void darray_remove(darray_type *arr, void (*freer) (void *), int pos);
+void darray_at(darray_type *arr, void **mem, int pos);
 
 #ifdef __cplusplus
 }

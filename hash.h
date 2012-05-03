@@ -30,22 +30,23 @@
 extern "C" {
 #endif
 
-struct darray;
-struct hash_bucket;
+#include "darray.h"
 
-struct hash {
-    struct darray *buckets;
-    unsigned max_size;
-};
+typedef struct hash_bucket hash_bucket;
 
-int hash_open(struct hash *hash, unsigned siz);
-void hash_close(struct hash *hash, void (*freer) (void *));
-int hash_insert(struct hash *hash, const char *key, void *mem, void (*freer) (void *));
-int hash_exists(struct hash *hash, const char *key);
-void hash_remove(struct hash *hash, const char *key, void (*freer) (void *));
-void hash_at(struct hash *hash, const char *key, void **mem);
-void hash_keys(struct hash *hash, struct darray *arr);
-void hash_values(struct hash *hash, struct darray *arr);
+typedef struct {
+    darray_type    *buckets;
+    unsigned        max_size;
+} hash_type;
+
+int hash_open(hash_type *hash, unsigned siz);
+void hash_close(hash_type *hash, void (*freer) (void *));
+int hash_insert(hash_type *hash, const char *key, void *mem, void (*freer) (void *));
+int hash_exists(hash_type *hash, const char *key);
+void hash_remove(hash_type *hash, const char *key, void (*freer) (void *));
+void hash_at(hash_type *hash, const char *key, void **mem);
+void hash_keys(hash_type *hash, darray_type *arr);
+void hash_values(hash_type *hash, darray_type *arr);
 
 #ifdef __cplusplus
 }
