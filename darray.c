@@ -23,12 +23,11 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#include "darray.h"
-
 #include <stdlib.h>
 #include <string.h>
+#include "darray.h"
 
-int darray_open(darray_type *arr, unsigned size)
+int darray_open(struct darray *arr, unsigned size)
 {
     arr->mem = calloc(size, sizeof *arr->mem);
     if (!arr->mem)
@@ -38,14 +37,14 @@ int darray_open(darray_type *arr, unsigned size)
     return 0;
 }
 
-void darray_close(darray_type *arr, void (*freer) (void *))
+void darray_close(struct darray *arr, void (*freer) (void *))
 {
     while (arr->length)
         darray_pop_back(arr, freer);
     free(arr->mem);
 }
 
-int darray_push_back(darray_type *arr, void *mem)
+int darray_push_back(struct darray *arr, void *mem)
 {
     void *tmp;
 
@@ -61,7 +60,7 @@ int darray_push_back(darray_type *arr, void *mem)
     return 0;
 }
 
-void darray_pop_back(darray_type *arr, void (*freer) (void *))
+void darray_pop_back(struct darray *arr, void (*freer) (void *))
 {
     if (freer)
         freer(arr->mem[--arr->length]);
@@ -69,7 +68,7 @@ void darray_pop_back(darray_type *arr, void (*freer) (void *))
         arr->length--;
 }
 
-int darray_insert(darray_type *arr, void *mem, int pos)
+int darray_insert(struct darray *arr, void *mem, int pos)
 {
     void *tmp;
 
@@ -87,7 +86,7 @@ int darray_insert(darray_type *arr, void *mem, int pos)
     return 0;
 }
 
-void darray_remove(darray_type *arr, void (*freer) (void *), int pos)
+void darray_remove(struct darray *arr, void (*freer) (void *), int pos)
 {
     if (freer)
         freer(arr->mem[pos]);
@@ -96,7 +95,7 @@ void darray_remove(darray_type *arr, void (*freer) (void *), int pos)
     memmove(&arr->mem[pos], &arr->mem[pos + 1], sizeof *arr->mem * (arr->length - pos));
 }
 
-void darray_at(darray_type *arr, void **mem, int pos)
+void darray_at(struct darray *arr, void **mem, int pos)
 {
     *mem = arr->mem[pos];
 }

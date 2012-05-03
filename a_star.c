@@ -25,7 +25,6 @@
  */
 #include <stdlib.h>
 #include <string.h>
-
 #include "a_star.h"
 #include "pqueue.h"
 
@@ -36,7 +35,7 @@ struct a_star_node {
     int g, h;
 };
 
-static int pqueue_has(pqueue_type *pq, void *mem)
+static int pqueue_has(struct pqueue *pq, void *mem)
 {
     unsigned i;
     for (i = 1; i < pq->size + 1; ++i)
@@ -70,7 +69,7 @@ int a_star(int x0, int y0, int x1, int y1, int *map, int w, int h, int *path, in
     struct a_star_node *nodes = NULL;
     struct a_star_node *ntmp = NULL, *head = NULL, *reversed = NULL;
     struct a_star_node *lowest = NULL, *neighbor = NULL;
-    pqueue_type open;
+    struct pqueue open;
 
     nodes = malloc(sizeof *nodes * w * h);
     if (!nodes) {

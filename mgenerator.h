@@ -30,20 +30,20 @@
 extern "C" {
 #endif
 
-#include "darray.h"
+struct darray;
 
-typedef struct {
-    darray_type *nodes;
-    darray_type *plans;
-} mgenerator_type;
+struct mgenerator {
+    struct darray *nodes;
+    struct darray *plans;
+};
 
-typedef int mgenerator_plan(mgenerator_type *mgen, int *, int, int, int, int);
+typedef int mgenerator_plan(struct mgenerator *mgen, int *, int, int, int, int);
 
-int mgenerator_open(mgenerator_type *mgen);
-void mgenerator_close(mgenerator_type *mgen);
-int mgenerator_add_node(mgenerator_type *mgen, int x, int y);
-int mgenerator_add_plan(mgenerator_type *mgen, mgenerator_plan *pl, int weight);
-int mgenerator_generate(mgenerator_type *mgen, int *map, int w, int h, int lim);
+int mgenerator_open(struct mgenerator *mgen);
+void mgenerator_close(struct mgenerator *mgen);
+int mgenerator_add_node(struct mgenerator *mgen, int x, int y);
+int mgenerator_add_plan(struct mgenerator *mgen, mgenerator_plan *pl, int weight);
+int mgenerator_generate(struct mgenerator *mgen, int *map, int w, int h, int lim);
 
 #ifdef __cplusplus
 }

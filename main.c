@@ -81,23 +81,23 @@ static void border_map(struct world *w, int tile);
 static void input(struct world *w);
 static void output(struct world *w);
 
-int room_XxX(mgenerator_type *mgen, int *map, int w, int h, int x, int y, int size);
+int room_XxX(struct mgenerator *mgen, int *map, int w, int h, int x, int y, int size);
 
-int left_hall_5(mgenerator_type *mgen, int *map, int w, int h, int x, int y);
-int right_hall_5(mgenerator_type *mgen, int *map, int w, int h, int x, int y);
-int up_hall_5(mgenerator_type *mgen, int *map, int w, int h, int x, int y);
-int down_hall_5(mgenerator_type *mgen, int *map, int w, int h, int x, int y);
-int room_7x7(mgenerator_type *mgen, int *map, int w, int h, int x, int y);
-int room_5x5(mgenerator_type *mgen, int *map, int w, int h, int x, int y);
-int room_3x3(mgenerator_type *mgen, int *map, int w, int h, int x, int y);
-int diamond_7(mgenerator_type *mgen, int *map, int w, int h, int x, int y);
-int treasure_3x3(mgenerator_type *mgen, int *map, int w, int h, int x, int y);
+int left_hall_5(struct mgenerator *mgen, int *map, int w, int h, int x, int y);
+int right_hall_5(struct mgenerator *mgen, int *map, int w, int h, int x, int y);
+int up_hall_5(struct mgenerator *mgen, int *map, int w, int h, int x, int y);
+int down_hall_5(struct mgenerator *mgen, int *map, int w, int h, int x, int y);
+int room_7x7(struct mgenerator *mgen, int *map, int w, int h, int x, int y);
+int room_5x5(struct mgenerator *mgen, int *map, int w, int h, int x, int y);
+int room_3x3(struct mgenerator *mgen, int *map, int w, int h, int x, int y);
+int diamond_7(struct mgenerator *mgen, int *map, int w, int h, int x, int y);
+int treasure_3x3(struct mgenerator *mgen, int *map, int w, int h, int x, int y);
 
 rng_state rng;
 
 int main(int argc, char *argv[])
 {
-    mgenerator_type mgen;
+    struct mgenerator mgen;
     struct world world;
     (void)argc;
     (void)argv;
@@ -261,7 +261,7 @@ static void output(struct world *w)
     output_tile(w->px, w->py, TPLAYER, 0);
 }
 
-int left_hall_5(mgenerator_type *mgen, int *map, int w, int h, int x, int y)
+int left_hall_5(struct mgenerator *mgen, int *map, int w, int h, int x, int y)
 {
     int ix;
 
@@ -288,7 +288,7 @@ int left_hall_5(mgenerator_type *mgen, int *map, int w, int h, int x, int y)
     return 0;
 }
 
-int right_hall_5(mgenerator_type *mgen, int *map, int w, int h, int x, int y)
+int right_hall_5(struct mgenerator *mgen, int *map, int w, int h, int x, int y)
 {
     int ix;
 
@@ -315,7 +315,7 @@ int right_hall_5(mgenerator_type *mgen, int *map, int w, int h, int x, int y)
     return 0;
 }
 
-int up_hall_5(mgenerator_type *mgen, int *map, int w, int h, int x, int y)
+int up_hall_5(struct mgenerator *mgen, int *map, int w, int h, int x, int y)
 {
     int iy;
 
@@ -342,7 +342,7 @@ int up_hall_5(mgenerator_type *mgen, int *map, int w, int h, int x, int y)
     return 0;
 }
 
-int down_hall_5(mgenerator_type *mgen, int *map, int w, int h, int x, int y)
+int down_hall_5(struct mgenerator *mgen, int *map, int w, int h, int x, int y)
 {
     int iy;
 
@@ -369,7 +369,7 @@ int down_hall_5(mgenerator_type *mgen, int *map, int w, int h, int x, int y)
     return 0;
 }
 
-int room_XxX(mgenerator_type *mgen, int *map, int w, int h, int x, int y, int size)
+int room_XxX(struct mgenerator *mgen, int *map, int w, int h, int x, int y, int size)
 {
     int ix, iy;
     int size2 = size / 2;
@@ -413,7 +413,7 @@ int room_XxX(mgenerator_type *mgen, int *map, int w, int h, int x, int y, int si
 }
 
 
-int diamond_7(mgenerator_type *mgen, int *map, int w, int h, int x, int y)
+int diamond_7(struct mgenerator *mgen, int *map, int w, int h, int x, int y)
 {
     int border_delta[12][2] = {
         {-3, -1},
@@ -477,22 +477,22 @@ int diamond_7(mgenerator_type *mgen, int *map, int w, int h, int x, int y)
     return 0;
 }
 
-int room_7x7(mgenerator_type *mgen, int *map, int w, int h, int x, int y)
+int room_7x7(struct mgenerator *mgen, int *map, int w, int h, int x, int y)
 {
     return room_XxX(mgen, map, w, h, x, y, 7);
 }
 
-int room_5x5(mgenerator_type *mgen, int *map, int w, int h, int x, int y)
+int room_5x5(struct mgenerator *mgen, int *map, int w, int h, int x, int y)
 {
     return room_XxX(mgen, map, w, h, x, y, 5);
 }
 
-int room_3x3(mgenerator_type *mgen, int *map, int w, int h, int x, int y)
+int room_3x3(struct mgenerator *mgen, int *map, int w, int h, int x, int y)
 {
     return room_XxX(mgen, map, w, h, x, y, 3);
 }
 
-int treasure_3x3(mgenerator_type *mgen, int *map, int w, int h, int x, int y)
+int treasure_3x3(struct mgenerator *mgen, int *map, int w, int h, int x, int y)
 {
     if (room_XxX(mgen, map, w, h, x, y, 3) == -1)
         return -1;

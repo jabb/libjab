@@ -23,18 +23,17 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+#include <stdlib.h>
 #include "queue.h"
 
-#include <stdlib.h>
-
 struct queue_node {
-    queue_node *next;
-    void       *mem;
+    struct queue_node  *next;
+    void               *mem;
 };
 
-int queue_enqueue(queue_type *q, void *mem)
+int queue_enqueue(struct queue *q, void *mem)
 {
-    queue_node *node = malloc(sizeof *node);
+    struct queue_node *node = malloc(sizeof *node);
     if (!node)
         return -1;
 
@@ -49,9 +48,9 @@ int queue_enqueue(queue_type *q, void *mem)
     return 1;
 }
 
-void queue_dequeue(queue_type *q, void (*freer) (void *v))
+void queue_dequeue(struct queue *q, void (*freer) (void *v))
 {
-    queue_node *tofree = q->bot;
+    struct queue_node *tofree = q->bot;
     q->bot = q->bot->next;
     if (!q->bot)
         q->top = NULL;
@@ -60,7 +59,7 @@ void queue_dequeue(queue_type *q, void (*freer) (void *v))
     free(tofree);
 }
 
-void queue_peek(queue_type *q, void **mem)
+void queue_peek(struct queue *q, void **mem)
 {
     *mem = q->bot->mem;
 }

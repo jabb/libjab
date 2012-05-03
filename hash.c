@@ -23,10 +23,10 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#include "hash.h"
-
 #include <stdlib.h>
 #include <string.h>
+#include "darray.h"
+#include "hash.h"
 
 static unsigned hashstr(const char *str, unsigned size)
 {
@@ -53,7 +53,7 @@ struct hash_bucket {
     void *mem;
 };
 
-int hash_open(hash_type *hash, unsigned siz)
+int hash_open(struct hash *hash, unsigned siz)
 {
     unsigned i;
     hash->buckets = calloc(siz, sizeof *hash->buckets);
@@ -67,10 +67,10 @@ int hash_open(hash_type *hash, unsigned siz)
     return 0;
 }
 
-void hash_close(hash_type *hash, void (*freer) (void *))
+void hash_close(struct hash *hash, void (*freer) (void *))
 {
     unsigned i, j;
-    hash_bucket *iter;
+    struct hash_bucket *iter;
 
     for (i = 0; i < hash->max_size; ++i) {
         for (j = 0; j < hash->buckets[i].length; ++j) {
@@ -85,10 +85,10 @@ void hash_close(hash_type *hash, void (*freer) (void *))
     free(hash->buckets);
 }
 
-int hash_insert(hash_type *hash, const char *key, void *mem, void (*freer) (void *))
+int hash_insert(struct hash *hash, const char *key, void *mem, void (*freer) (void *))
 {
     unsigned i, h;
-    hash_bucket *bucket = malloc(sizeof *bucket), *iter;
+    struct hash_bucket *bucket = malloc(sizeof *bucket), *iter;
     if (!bucket)
         return -1;
 
@@ -116,10 +116,10 @@ int hash_insert(hash_type *hash, const char *key, void *mem, void (*freer) (void
     return 0;
 }
 
-int hash_exists(hash_type *hash, const char *key)
+int hash_exists(struct hash *hash, const char *key)
 {
     unsigned i, h;
-    hash_bucket *iter;
+    struct hash_bucket *iter;
 
     h = hashstr(key, hash->max_size);
 
@@ -132,10 +132,10 @@ int hash_exists(hash_type *hash, const char *key)
     return 0;
 }
 
-void hash_remove(hash_type *hash, const char *key, void (*freer) (void *))
+void hash_remove(struct hash *hash, const char *key, void (*freer) (void *))
 {
     unsigned i, h;
-    hash_bucket *iter;
+    struct hash_bucket *iter;
 
     h = hashstr(key, hash->max_size);
 
@@ -148,10 +148,10 @@ void hash_remove(hash_type *hash, const char *key, void (*freer) (void *))
     }
 }
 
-void hash_at(hash_type *hash, const char *key, void **mem)
+void hash_at(struct hash *hash, const char *key, void **mem)
 {
     unsigned i, h;
-    hash_bucket *iter;
+    struct hash_bucket *iter;
 
     h = hashstr(key, hash->max_size);
 
@@ -166,10 +166,10 @@ void hash_at(hash_type *hash, const char *key, void **mem)
     *mem = NULL;
 }
 
-void hash_keys(hash_type *hash, darray_type *arr)
+void hash_keys(struct hash *hash, struct darray *arr)
 {
     unsigned i, j;
-    hash_bucket *iter;
+    struct hash_bucket *iter;
 
     for (i = 0; i < hash->max_size; ++i) {
         for (j = 0; j < hash->buckets[i].length; ++j) {
@@ -179,10 +179,10 @@ void hash_keys(hash_type *hash, darray_type *arr)
     }
 }
 
-void hash_values(hash_type *hash, darray_type *arr)
+void hash_values(struct hash *hash, struct darray *arr)
 {
     unsigned i, j;
-    hash_bucket *iter;
+    struct hash_bucket *iter;
 
     for (i = 0; i < hash->max_size; ++i) {
         for (j = 0; j < hash->buckets[i].length; ++j) {

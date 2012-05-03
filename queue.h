@@ -30,15 +30,15 @@
 extern "C" {
 #endif
 
-typedef struct queue_node queue_node;
-typedef struct {
-    queue_node *bot;
-    queue_node *top;
-} queue_type;
+struct queue_node;
+struct queue {
+    struct queue_node *bot;
+    struct queue_node *top;
+};
 
-int queue_enqueue(queue_type *s, void *mem);
-void queue_dequeue(queue_type *s, void (*freer) (void *v));
-void queue_peek(queue_type *s, void **mem);
+int queue_enqueue(struct queue *s, void *mem);
+void queue_dequeue(struct queue *s, void (*freer) (void *v));
+void queue_peek(struct queue *s, void **mem);
 
 #ifdef __cplusplus
 }

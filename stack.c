@@ -23,18 +23,17 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+#include <stdlib.h>
 #include "stack.h"
 
-#include <stdlib.h>
-
 struct stack_node {
-    stack_node *below;
-    void       *mem;
+    struct stack_node  *below;
+    void               *mem;
 };
 
-int stack_push(stack_type *s, void *mem)
+int stack_push(struct stack *s, void *mem)
 {
-    stack_node *node = malloc(sizeof *node);
+    struct stack_node *node = malloc(sizeof *node);
     if (!node)
         return -1;
 
@@ -45,16 +44,16 @@ int stack_push(stack_type *s, void *mem)
     return 1;
 }
 
-void stack_pop(stack_type *s, void (*freer) (void *v))
+void stack_pop(struct stack *s, void (*freer) (void *v))
 {
-    stack_node *tofree = s->top;
+    struct stack_node *tofree = s->top;
     s->top = s->top->below;
     if (freer)
         freer(tofree->mem);
     free(tofree);
 }
 
-void stack_peek(stack_type *s, void **mem)
+void stack_peek(struct stack *s, void **mem)
 {
     *mem = s->top->mem;
 }

@@ -30,16 +30,16 @@
 extern "C" {
 #endif
 
-typedef struct {
+struct pqueue {
     void **mem;
     unsigned size, allocd;
-} pqueue_type;
+};
 
-int pqueue_open(pqueue_type *pq, unsigned size);
-void pqueue_close(pqueue_type *pq, void (*freer) (void *));
-int pqueue_push(pqueue_type *pq, void *mem, int (*comparitor) (void *, void *));
-void pqueue_pop(pqueue_type *pq, void (*freer) (void *), int (*comparitor) (void *, void *));
-void pqueue_top(pqueue_type *pq, void **mem);
+int pqueue_open(struct pqueue *pq, unsigned size);
+void pqueue_close(struct pqueue *pq, void (*freer) (void *));
+int pqueue_push(struct pqueue *pq, void *mem, int (*comparitor) (void *, void *));
+void pqueue_pop(struct pqueue *pq, void (*freer) (void *), int (*comparitor) (void *, void *));
+void pqueue_top(struct pqueue *pq, void **mem);
 
 #ifdef __cplusplus
 }
