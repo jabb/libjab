@@ -56,7 +56,7 @@ Mersenne Twister
 
 
 
-static void mt_seed(mt19937_state *st, uint32_t seed)
+static void mt_seed(struct mt19937_state *st, uint32_t seed)
 {
     st->mt[0] = seed & 0xffffffffU;
     for (st->mti = 1; st->mti < N; st->mti++)
@@ -65,7 +65,7 @@ static void mt_seed(mt19937_state *st, uint32_t seed)
 
 
 
-static uint32_t mt_random(mt19937_state *st)
+static uint32_t mt_random(struct mt19937_state *st)
 {
     static uint32_t mag01[2] = {0x0, MATRIX_A};
     uint32_t y;
@@ -149,7 +149,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 
-static void period_certification(tinymt_state *st) {
+static void period_certification(struct tinymt_state *st) {
     if ((st->status[0] & TINYMT32_MASK) == 0 &&
         st->status[1] == 0 &&
         st->status[2] == 0 &&
@@ -164,7 +164,7 @@ static void period_certification(tinymt_state *st) {
 
 
 
-static void tinymt_next_state(tinymt_state *st)
+static void tinymt_next_state(struct tinymt_state *st)
 {
     uint32_t x;
     uint32_t y;
@@ -185,7 +185,7 @@ static void tinymt_next_state(tinymt_state *st)
 
 
 
-static void tinymt_seed(tinymt_state *st, uint32_t seed)
+static void tinymt_seed(struct tinymt_state *st, uint32_t seed)
 {
     int i;
     st->status[0] = seed;
@@ -205,7 +205,7 @@ static void tinymt_seed(tinymt_state *st, uint32_t seed)
 
 
 
-static uint32_t tinymt_temper(tinymt_state *st) {
+static uint32_t tinymt_temper(struct tinymt_state *st) {
     uint32_t t0, t1;
     t0 = st->status[3];
 #if defined(LINEARITY_CHECK)
@@ -222,7 +222,7 @@ static uint32_t tinymt_temper(tinymt_state *st) {
 
 
 
-static uint32_t tinymt_random(tinymt_state *st) {
+static uint32_t tinymt_random(struct tinymt_state *st) {
     tinymt_next_state(st);
     return tinymt_temper(st);
 }
@@ -233,7 +233,7 @@ Xor128
 
 
 
-static void xor128_seed(xor128_state *st, uint32_t seed)
+static void xor128_seed(struct xor128_state *st, uint32_t seed)
 {
     int i;
 
@@ -245,7 +245,7 @@ static void xor128_seed(xor128_state *st, uint32_t seed)
 
 
 
-static uint32_t xor128_random(xor128_state *st)
+static uint32_t xor128_random(struct xor128_state *st)
 {
     uint32_t t;
     t = (st->q[0] ^ (st->q[0] << 11));
@@ -261,7 +261,7 @@ Complementary Multiply with Carry
 
 
 
-static void cmwc_seed(cmwc_state *st, uint32_t seed)
+static void cmwc_seed(struct cmwc_state *st, uint32_t seed)
 {
     int i;
 
@@ -275,7 +275,7 @@ static void cmwc_seed(cmwc_state *st, uint32_t seed)
 
 
 
-static uint32_t cmwc_random(cmwc_state *st)
+static uint32_t cmwc_random(struct cmwc_state *st)
 {
     uint32_t th, tl, q, qh, ql, a = 18782;
     uint32_t x, r = 0xfffffffe;
@@ -307,7 +307,7 @@ Generic RNG
 
 
 
-void rng_seed(rng_state *st, uint32_t seed, int type)
+void rng_seed(struct rng_state *st, uint32_t seed, int type)
 {
     st->type = type;
 
@@ -334,7 +334,7 @@ void rng_seed(rng_state *st, uint32_t seed, int type)
 
 
 
-uint32_t rng_u32(rng_state *st)
+uint32_t rng_u32(struct rng_state *st)
 {
     switch (st->type) {
     case RNG_MT19937:
@@ -357,28 +357,28 @@ uint32_t rng_u32(rng_state *st)
 
 
 
-double rng_unit(rng_state *st)
+double rng_unit(struct rng_state *st)
 {
     return rng_u32(st) * 2.3283064365386963e-10;
 }
 
 
 
-double rng_under(rng_state *st, int32_t max)
+double rng_under(struct rng_state *st, int32_t max)
 {
     return rng_unit(st) * max;
 }
 
 
 
-double rng_between(rng_state *st, int32_t min, int32_t max)
+double rng_between(struct rng_state *st, int32_t min, int32_t max)
 {
     return rng_under(st, max - min) + min;
 }
 
 
 
-int32_t rng_range(rng_state *st, int32_t min, int32_t max)
+int32_t rng_range(struct rng_state *st, int32_t min, int32_t max)
 {
     return floor(rng_between(st, min, max + 1));
 }
@@ -528,11 +528,11 @@ Noise
 
 
 
-void noise_seed(noise_state *ns, rng_state *st, int type)
+void noise_seed(struct noise_state *ns, struct rng_state *st, int type)
 {
     uint32_t i, j, t;
-    rng_state backup;
-    rng_state *rng = st;
+    struct rng_state backup;
+    struct rng_state *rng = st;
 
     if (!st) {
         rng_seed(&backup, 12345, RNG_XOR128);
@@ -563,7 +563,7 @@ void noise_seed(noise_state *ns, rng_state *st, int type)
 
 
 
-void noise_detail(noise_state *ns, uint32_t octaves, double fallout)
+void noise_detail(struct noise_state *ns, uint32_t octaves, double fallout)
 {
     ns->octaves = octaves;
     ns->fallout = fallout;
@@ -571,7 +571,7 @@ void noise_detail(noise_state *ns, uint32_t octaves, double fallout)
 
 
 
-double noise_generate(noise_state *ns, double x, double y, double z, double t)
+double noise_generate(struct noise_state *ns, double x, double y, double z, double t)
 {
     double n, effect, k;
     uint32_t i;

@@ -27,6 +27,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+
 #include "at.h"
 #include "at_aux.h"
 #include "darray.h"
@@ -93,7 +94,7 @@ int room_3x3(struct mgenerator *mgen, int *map, int w, int h, int x, int y);
 int diamond_7(struct mgenerator *mgen, int *map, int w, int h, int x, int y);
 int treasure_3x3(struct mgenerator *mgen, int *map, int w, int h, int x, int y);
 
-rng_state rng;
+struct rng_state rng;
 
 int main(int argc, char *argv[])
 {

@@ -23,13 +23,16 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#include <stdlib.h>
 #include "queue.h"
+
+#include <stdlib.h>
 
 struct queue_node {
     struct queue_node  *next;
     void               *mem;
 };
+
+
 
 int queue_enqueue(struct queue *q, void *mem)
 {
@@ -48,6 +51,8 @@ int queue_enqueue(struct queue *q, void *mem)
     return 1;
 }
 
+
+
 void queue_dequeue(struct queue *q, void (*freer) (void *v))
 {
     struct queue_node *tofree = q->bot;
@@ -58,6 +63,8 @@ void queue_dequeue(struct queue *q, void (*freer) (void *v))
         freer(tofree->mem);
     free(tofree);
 }
+
+
 
 void queue_peek(struct queue *q, void **mem)
 {

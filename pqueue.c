@@ -23,8 +23,11 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#include <stdlib.h>
 #include "pqueue.h"
+
+#include <stdlib.h>
+
+
 
 int pqueue_open(struct pqueue *pq, unsigned size)
 {
@@ -36,6 +39,8 @@ int pqueue_open(struct pqueue *pq, unsigned size)
     return 0;
 }
 
+
+
 void pqueue_close(struct pqueue *pq, void (*freer) (void *))
 {
     unsigned i;
@@ -44,6 +49,8 @@ void pqueue_close(struct pqueue *pq, void (*freer) (void *))
             freer(pq->mem[i]);
     free(pq->mem);
 }
+
+
 
 int pqueue_push(struct pqueue *pq, void *mem, int (*comparitor) (void *, void *))
 {
@@ -64,6 +71,8 @@ int pqueue_push(struct pqueue *pq, void *mem, int (*comparitor) (void *, void *)
 
     return 0;
 }
+
+
 
 void pqueue_pop(struct pqueue *pq, void (*freer) (void *), int (*comparitor) (void *, void *))
 {
@@ -86,6 +95,8 @@ void pqueue_pop(struct pqueue *pq, void (*freer) (void *), int (*comparitor) (vo
 
     pq->mem[i] = last;
 }
+
+
 
 void pqueue_top(struct pqueue *pq, void **mem)
 {

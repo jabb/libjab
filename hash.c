@@ -23,10 +23,14 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+#include "hash.h"
+
 #include <stdlib.h>
 #include <string.h>
+
 #include "darray.h"
-#include "hash.h"
+
+
 
 static unsigned hashstr(const char *str, unsigned size)
 {
@@ -41,6 +45,8 @@ static unsigned hashstr(const char *str, unsigned size)
     return h % size;
 }
 
+
+
 static char *string_dup(const char *str)
 {
     char *dup = malloc(strlen(str) + 1);
@@ -48,10 +54,14 @@ static char *string_dup(const char *str)
     return dup;
 }
 
+
+
 struct hash_bucket {
     char *key;
     void *mem;
 };
+
+
 
 int hash_open(struct hash *hash, unsigned siz)
 {
@@ -66,6 +76,8 @@ int hash_open(struct hash *hash, unsigned siz)
 
     return 0;
 }
+
+
 
 void hash_close(struct hash *hash, void (*freer) (void *))
 {
@@ -84,6 +96,8 @@ void hash_close(struct hash *hash, void (*freer) (void *))
 
     free(hash->buckets);
 }
+
+
 
 int hash_insert(struct hash *hash, const char *key, void *mem, void (*freer) (void *))
 {
@@ -116,6 +130,8 @@ int hash_insert(struct hash *hash, const char *key, void *mem, void (*freer) (vo
     return 0;
 }
 
+
+
 int hash_exists(struct hash *hash, const char *key)
 {
     unsigned i, h;
@@ -132,6 +148,8 @@ int hash_exists(struct hash *hash, const char *key)
     return 0;
 }
 
+
+
 void hash_remove(struct hash *hash, const char *key, void (*freer) (void *))
 {
     unsigned i, h;
@@ -147,6 +165,8 @@ void hash_remove(struct hash *hash, const char *key, void (*freer) (void *))
         }
     }
 }
+
+
 
 void hash_at(struct hash *hash, const char *key, void **mem)
 {
@@ -166,6 +186,8 @@ void hash_at(struct hash *hash, const char *key, void **mem)
     *mem = NULL;
 }
 
+
+
 void hash_keys(struct hash *hash, struct darray *arr)
 {
     unsigned i, j;
@@ -178,6 +200,8 @@ void hash_keys(struct hash *hash, struct darray *arr)
         }
     }
 }
+
+
 
 void hash_values(struct hash *hash, struct darray *arr)
 {

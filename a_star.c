@@ -23,9 +23,11 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+#include "a_star.h"
+
 #include <stdlib.h>
 #include <string.h>
-#include "a_star.h"
+
 #include "pqueue.h"
 
 struct a_star_node {
@@ -34,6 +36,8 @@ struct a_star_node {
     int x, y;
     int g, h;
 };
+
+
 
 static int pqueue_has(struct pqueue *pq, void *mem)
 {
@@ -44,6 +48,8 @@ static int pqueue_has(struct pqueue *pq, void *mem)
     return 0;
 }
 
+
+
 static int heuristic(int x0, int y0, int x1, int y1)
 {
     int dx = abs(x0 - x1);
@@ -53,11 +59,15 @@ static int heuristic(int x0, int y0, int x1, int y1)
     return diag + (straight - 2 * diag);
 }
 
+
+
 static int a_star_node_cmp(void *a, void *b)
 {
     return (((struct a_star_node *)a)->g + ((struct a_star_node *)a)->h) -
            (((struct a_star_node *)b)->g + ((struct a_star_node *)b)->h);
 }
+
+
 
 int a_star(int x0, int y0, int x1, int y1, int *map, int w, int h, int *path, int sz)
 {

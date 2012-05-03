@@ -23,9 +23,11 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#include <stdlib.h>
-#include "darray.h"
 #include "mgenerator.h"
+
+#include <stdlib.h>
+
+#include "darray.h"
 #include "random.h"
 
 struct point {
@@ -37,7 +39,7 @@ struct plan_and_weight {
     int weight;
 };
 
-extern rng_state rng;
+extern struct rng_state rng;
 
 static struct plan_and_weight *select_plan(struct darray *plans)
 {

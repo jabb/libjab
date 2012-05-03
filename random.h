@@ -35,75 +35,75 @@ extern "C" {
 /* Slow. Period = 2^19937 - 1. */
 enum {MT19937_K = 624};
 
-typedef struct {
+struct mt19937_state {
     uint32_t    mt[MT19937_K];
     int32_t     mti;
-} mt19937_state;
+};
 
 /* Fast. Period = 2^127 - 1. */
 enum {TINYMT_K = 4};
 
-typedef struct {
+struct tinymt_state {
     uint32_t status[TINYMT_K];
     uint32_t mat1;
     uint32_t mat2;
     uint32_t tmat;
-} tinymt_state;
+};
 
 /* Very Fast. Period = 2^128 - 1. */
 enum {XOR128_K = 4};
 
-typedef struct {
+struct xor128_state {
     uint32_t q[XOR128_K];
-} xor128_state;
+};
 
 /* Fast. Period ~= 2^131104. */
 enum {CMWC_K = 4096};
 
-typedef struct {
+struct cmwc_state {
     uint32_t q[CMWC_K];
     uint32_t c;
     uint32_t i;
-} cmwc_state;
+};
 
 enum {RNG_MT19937, RNG_TINYMT, RNG_XOR128, RNG_CMWC};
 
-typedef struct {
+struct rng_state {
     int type;
     union {
-        mt19937_state   mt19937;
-        tinymt_state    tinymt;
-        xor128_state    xor128;
-        cmwc_state      cmwc;
+        struct mt19937_state    mt19937;
+        struct tinymt_state     tinymt;
+        struct xor128_state     xor128;
+        struct cmwc_state       cmwc;
     } state;
-} rng_state;
+};
 
-void rng_seed(rng_state *st, uint32_t s, int type);
+void rng_seed(struct rng_state *st, uint32_t s, int type);
 /* [0, 2^32] */
-uint32_t rng_u32(rng_state *st);
+uint32_t rng_u32(struct rng_state *st);
 /* [0, 1) */
-double rng_unit(rng_state *st);
+double rng_unit(struct rng_state *st);
 /* [0, max) */
-double rng_under(rng_state *st, int32_t max);
+double rng_under(struct rng_state *st, int32_t max);
 /* [min, max) */
-double rng_between(rng_state *st, int32_t min, int32_t max);
+double rng_between(struct rng_state *st, int32_t min, int32_t max);
 /* min to max */
-int32_t rng_range(rng_state *st, int32_t min, int32_t max);
+int32_t rng_range(struct rng_state *st, int32_t min, int32_t max);
 
 enum {NOISE_SIMPLEX, NOISE_WAVELET, NOISE_PERLIN};
 
-typedef struct {
+struct noise_state {
     int type;
     union {
         uint32_t p[512];
     } state;
     uint32_t octaves;
     double fallout;
-} noise_state;
+};
 
-void noise_seed(noise_state *ns, rng_state *st, int type);
-void noise_detail(noise_state *ns, uint32_t octaves, double fallout);
-double noise_generate(noise_state *ns, double x, double y, double z, double t);
+void noise_seed(struct noise_state *ns, struct rng_state *st, int type);
+void noise_detail(struct noise_state *ns, uint32_t octaves, double fallout);
+double noise_generate(struct noise_state *ns, double x, double y, double z, double t);
 
 #ifdef __cplusplus
 }
