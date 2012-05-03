@@ -35,7 +35,19 @@ Common
 \******************************************************************************/
 
 typedef void free_func(void *);
+/* Returns 0 on equality,
+ *        <0 when the first arg is less than the second,
+ *        >0 when the first arg is greater than the first.
+ */
 typedef int comp_func(void *, void *);
+
+void *box_long(long l);
+void *box_double(double d);
+void *box_string(const char *s);
+
+int comp_long(void *a, void *b);
+int comp_double(void *a, void *b);
+int comp_string(void *a, void *b);
 
 /******************************************************************************\
 Stack
@@ -92,7 +104,7 @@ Priority Queue
 
 struct pqueue {
     void **mem;
-    unsigned size, allocd;
+    unsigned length, allocd;
 };
 
 int pqueue_init(struct pqueue *pq, unsigned size);

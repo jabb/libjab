@@ -42,7 +42,7 @@ struct a_star_node {
 static int pqueue_has(struct pqueue *pq, void *mem)
 {
     unsigned i;
-    for (i = 1; i < pq->size + 1; ++i)
+    for (i = 1; i < pq->length + 1; ++i)
         if (pq->mem[i] == mem)
             return 1;
     return 0;
@@ -94,7 +94,7 @@ int a_star(int x0, int y0, int x1, int y1, int *map, int w, int h, int *path, in
     pqueue_init(&open, 256);
     pqueue_push(&open, &nodes[y0 * w + x0], a_star_node_cmp);
 
-    while (open.size) {
+    while (open.length) {
         pqueue_top(&open, (void **)&lowest);
         pqueue_pop(&open, NULL, a_star_node_cmp);
         lowest->closed = 1;

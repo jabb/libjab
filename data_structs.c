@@ -29,6 +29,70 @@
 #include <string.h>
 
 /******************************************************************************\
+Common
+\******************************************************************************/
+
+
+
+void *box_long(long l)
+{
+    long *v = malloc(sizeof *v);
+    if (!v)
+        return NULL;
+    *v = l;
+    return v;
+}
+
+
+
+void *box_double(double d)
+{
+    double *v = malloc(sizeof *v);
+    if (!v)
+        return NULL;
+    *v = d;
+    return v;
+}
+
+
+
+void *box_string(const char *s)
+{
+    char *v = malloc(strlen(s) + 1);
+    if (!v)
+        return NULL;
+    strcpy(v, s);
+    return v;
+}
+
+
+
+int comp_double(void *a, void *b)
+{
+    double x = *(double *)a;
+    double y = *(double *)b;
+    return x < y ? -1 :
+           y < x ?  1 :
+           0;
+}
+
+
+
+int comp_long(void *a, void *b)
+{
+    long x = *(long *)a;
+    long y = *(long *)b;
+    return x - y;
+}
+
+
+
+int comp_string(void *a, void *b)
+{
+    return strcmp(a, b);
+}
+
+/******************************************************************************\
 Stack
 \******************************************************************************/
 
@@ -257,7 +321,7 @@ int pqueue_init(struct pqueue *pq, unsigned size)
     pq->mem = malloc(sizeof *pq->mem * size);
     if (!pq->mem)
         return -1;
-    pq->size = 0;
+    pq->length = 0;
     pq->allocd = size;
     return 0;
 }
@@ -268,7 +332,7 @@ void pqueue_uninit(struct pqueue *pq, free_func *freer)
 {
     unsigned i;
     if (freer)
-        for (i = 1; i < pq->size + 1; ++i)
+        for (i = 1; i < pq->length + 1; ++i)
             freer(pq->mem[i]);
     free(pq->mem);
 }
@@ -280,7 +344,7 @@ int pqueue_push(struct pqueue *pq, void *mem, comp_func *compare)
     int i;
     void **new_mem;
 
-    if (pq->size + 1 >= pq->allocd) {
+    if (pq->length + 1 >= pq->allocd) {
         new_mem = realloc(pq->mem, sizeof *pq->mem * pq->allocd * 2);
         if (!new_mem)
             return -1;
@@ -288,7 +352,7 @@ int pqueue_push(struct pqueue *pq, void *mem, comp_func *compare)
         pq->allocd *= 2;
     }
 
-    for (i = ++pq->size; i > 1 && compare(pq->mem[i / 2], mem) > 0; i /= 2)
+    for (i = ++pq->length; i > 1 && compare(pq->mem[i / 2], mem) > 0; i /= 2)
         pq->mem[i] = pq->mem[i / 2];
     pq->mem[i] = mem;
 
@@ -301,13 +365,13 @@ void pqueue_pop(struct pqueue *pq, free_func *freer, comp_func *compare)
 {
     unsigned i, child;
     void *tofree = pq->mem[1];
-    void *last = pq->mem[pq->size--];
+    void *last = pq->mem[pq->length--];
     if (freer)
         freer(tofree);
 
-    for (i = 1; i * 2 <= pq->size; i = child) {
+    for (i = 1; i * 2 <= pq->length; i = child) {
         child = i * 2;
-        if (child != pq->size && compare(pq->mem[child], pq->mem[child + 1]) > 0)
+        if (child != pq->length && compare(pq->mem[child], pq->mem[child + 1]) > 0)
             child++;
 
         if (compare(last, pq->mem[child]) > 0)
