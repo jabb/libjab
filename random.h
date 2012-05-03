@@ -32,7 +32,7 @@
 extern "C" {
 #endif
 
-/* Slow. Period = 2^19937 - 1. */
+/* Medium speed. Medium memory. Period = 2^19937 - 1. */
 enum {MT19937_K = 624};
 
 struct mt19937_state {
@@ -40,7 +40,7 @@ struct mt19937_state {
     int32_t     mti;
 };
 
-/* Fast. Period = 2^127 - 1. */
+/* Slow speed. Low memory. Period = 2^127 - 1. */
 enum {TINYMT_K = 4};
 
 struct tinymt_state {
@@ -50,14 +50,14 @@ struct tinymt_state {
     uint32_t tmat;
 };
 
-/* Very Fast. Period = 2^128 - 1. */
+/* Fast speed. Low memory. Period = 2^128 - 1. */
 enum {XOR128_K = 4};
 
 struct xor128_state {
     uint32_t q[XOR128_K];
 };
 
-/* Fast. Period ~= 2^131104. */
+/* Medium speed. High memory. Period ~= 2^131104. */
 enum {CMWC_K = 4096};
 
 struct cmwc_state {

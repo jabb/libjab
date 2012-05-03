@@ -94,9 +94,9 @@ int darray_init(struct darray *arr, unsigned size);
 void darray_uninit(struct darray *arr, free_func *freer);
 int darray_push_back(struct darray *arr, void *mem);
 void darray_pop_back(struct darray *arr, free_func *freer);
-int darray_insert(struct darray *arr, void *mem, int pos);
+int darray_insert(struct darray *arr, int pos, void *mem);
 void darray_remove(struct darray *arr, free_func *freer, int pos);
-void darray_at(struct darray *arr, void **mem, int pos);
+void darray_at(struct darray *arr, int pos, void **mem);
 
 /******************************************************************************\
 Priority Queue
@@ -109,9 +109,12 @@ struct pqueue {
 
 int pqueue_init(struct pqueue *pq, unsigned size);
 void pqueue_uninit(struct pqueue *pq, free_func *freer);
-int pqueue_push(struct pqueue *pq, void *mem, comp_func *compare);
-void pqueue_pop(struct pqueue *pq, free_func *freer, comp_func *compare);
-void pqueue_top(struct pqueue *pq, void **mem);
+/* DO NOT MIX MIN's AND MAX's */
+int pqueue_push_min(struct pqueue *pq, void *mem, comp_func *compare);
+void pqueue_pop_min(struct pqueue *pq, free_func *freer, comp_func *compare);
+int pqueue_push_max(struct pqueue *pq, void *mem, comp_func *compare);
+void pqueue_pop_max(struct pqueue *pq, free_func *freer, comp_func *compare);
+void pqueue_peek(struct pqueue *pq, void **mem);
 
 /******************************************************************************\
 Hash

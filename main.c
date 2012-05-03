@@ -24,10 +24,23 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 
 #include "data_structs.h"
+#include "random.h"
 
 int main(void)
 {
+    unsigned i;
+
+    struct rng_state rng;
+
+    rng_seed(&rng, time(NULL), RNG_XOR128);
+
+    for (i = 0; i < 50; ++i) {
+        printf("%u\n", rng_u32(&rng));
+    }
+
     return 0;
 }

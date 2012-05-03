@@ -92,11 +92,11 @@ int a_star(int x0, int y0, int x1, int y1, int *map, int w, int h, int *path, in
     nodes[y0 * w + x0].y = y0;
 
     pqueue_init(&open, 256);
-    pqueue_push(&open, &nodes[y0 * w + x0], a_star_node_cmp);
+    pqueue_push_min(&open, &nodes[y0 * w + x0], a_star_node_cmp);
 
     while (open.length) {
-        pqueue_top(&open, (void **)&lowest);
-        pqueue_pop(&open, NULL, a_star_node_cmp);
+        pqueue_peek(&open, (void **)&lowest);
+        pqueue_pop_min(&open, NULL, a_star_node_cmp);
         lowest->closed = 1;
 
         if (lowest->x == x1 && lowest->y == y1)
@@ -112,7 +112,7 @@ int a_star(int x0, int y0, int x1, int y1, int *map, int w, int h, int *path, in
                     neighbor->y = ny;
                     neighbor->g = lowest->g + dirs[i][2];
                     neighbor->h = heuristic(nx, ny, x1, y1);
-                    pqueue_push(&open, neighbor, a_star_node_cmp);
+                    pqueue_push_min(&open, neighbor, a_star_node_cmp);
                     neighbor->parent = lowest;
                 }
                 else if (lowest->g + dirs[i][2] < neighbor->g) {

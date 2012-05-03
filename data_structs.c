@@ -272,7 +272,7 @@ void darray_pop_back(struct darray *arr, free_func *freer)
 
 
 
-int darray_insert(struct darray *arr, void *mem, int pos)
+int darray_insert(struct darray *arr, int pos, void *mem)
 {
     void *tmp;
 
@@ -305,7 +305,7 @@ void darray_remove(struct darray *arr, free_func *freer, int pos)
 
 
 
-void darray_at(struct darray *arr, void **mem, int pos)
+void darray_at(struct darray *arr, int pos, void **mem)
 {
     *mem = arr->mem[pos];
 }
@@ -318,7 +318,8 @@ Priority Queue
 
 int pqueue_init(struct pqueue *pq, unsigned size)
 {
-    pq->mem = malloc(sizeof *pq->mem * size);
+    /* Size + 1, since we don't count element 0. */
+    pq->mem = malloc(sizeof *pq->mem * (size + 1));
     if (!pq->mem)
         return -1;
     pq->length = 0;
@@ -339,7 +340,7 @@ void pqueue_uninit(struct pqueue *pq, free_func *freer)
 
 
 
-int pqueue_push(struct pqueue *pq, void *mem, comp_func *compare)
+int pqueue_push_min(struct pqueue *pq, void *mem, comp_func *comp)
 {
     int i;
     void **new_mem;
@@ -352,7 +353,7 @@ int pqueue_push(struct pqueue *pq, void *mem, comp_func *compare)
         pq->allocd *= 2;
     }
 
-    for (i = ++pq->length; i > 1 && compare(pq->mem[i / 2], mem) > 0; i /= 2)
+    for (i = ++pq->length; i > 1 && comp(pq->mem[i / 2], mem) > 0; i /= 2)
         pq->mem[i] = pq->mem[i / 2];
     pq->mem[i] = mem;
 
@@ -361,7 +362,7 @@ int pqueue_push(struct pqueue *pq, void *mem, comp_func *compare)
 
 
 
-void pqueue_pop(struct pqueue *pq, free_func *freer, comp_func *compare)
+void pqueue_pop_min(struct pqueue *pq, free_func *freer, comp_func *comp)
 {
     unsigned i, child;
     void *tofree = pq->mem[1];
@@ -371,10 +372,10 @@ void pqueue_pop(struct pqueue *pq, free_func *freer, comp_func *compare)
 
     for (i = 1; i * 2 <= pq->length; i = child) {
         child = i * 2;
-        if (child != pq->length && compare(pq->mem[child], pq->mem[child + 1]) > 0)
+        if (child != pq->length && comp(pq->mem[child], pq->mem[child + 1]) > 0)
             child++;
 
-        if (compare(last, pq->mem[child]) > 0)
+        if (comp(last, pq->mem[child]) > 0)
             pq->mem[i] = pq->mem[child];
         else
             break;
@@ -385,7 +386,53 @@ void pqueue_pop(struct pqueue *pq, free_func *freer, comp_func *compare)
 
 
 
-void pqueue_top(struct pqueue *pq, void **mem)
+int pqueue_push_max(struct pqueue *pq, void *mem, comp_func *comp)
+{
+    int i;
+    void **new_mem;
+
+    if (pq->length + 1 >= pq->allocd) {
+        new_mem = realloc(pq->mem, sizeof *pq->mem * pq->allocd * 2);
+        if (!new_mem)
+            return -1;
+        pq->mem = new_mem;
+        pq->allocd *= 2;
+    }
+
+    for (i = ++pq->length; i > 1 && comp(pq->mem[i / 2], mem) < 0; i /= 2)
+        pq->mem[i] = pq->mem[i / 2];
+    pq->mem[i] = mem;
+
+    return 0;
+}
+
+
+
+void pqueue_pop_max(struct pqueue *pq, free_func *freer, comp_func *comp)
+{
+    unsigned i, child;
+    void *tofree = pq->mem[1];
+    void *last = pq->mem[pq->length--];
+    if (freer)
+        freer(tofree);
+
+    for (i = 1; i * 2 <= pq->length; i = child) {
+        child = i * 2;
+        if (child != pq->length && comp(pq->mem[child], pq->mem[child + 1]) < 0)
+            child++;
+
+        if (comp(last, pq->mem[child]) < 0)
+            pq->mem[i] = pq->mem[child];
+        else
+            break;
+    }
+
+    pq->mem[i] = last;
+}
+
+
+
+void pqueue_peek(struct pqueue *pq, void **mem)
 {
     *mem = pq->mem[1];
 }
@@ -452,7 +499,7 @@ void hash_uninit(struct hash *hash, free_func *freer)
 
     for (i = 0; i < hash->max_size; ++i) {
         for (j = 0; j < hash->buckets[i].length; ++j) {
-            darray_at(&hash->buckets[i], (void **)&iter, j);
+            darray_at(&hash->buckets[i], j, (void **)&iter);
             free(iter->key);
             if (freer)
                 freer(iter->mem);
@@ -482,7 +529,7 @@ int hash_insert(struct hash *hash, const char *key, void *mem, free_func *freer)
     h = hashstr(key, hash->max_size);
 
     for (i = 0; i < hash->buckets[h].length; ++i) {
-        darray_at(&hash->buckets[h], (void **)&iter, i);
+        darray_at(&hash->buckets[h], i, (void **)&iter);
         if (!strcmp(iter->key, bucket->key)) {
             if (freer)
                 freer(hash->buckets[h].mem[i]);
@@ -506,7 +553,7 @@ int hash_exists(struct hash *hash, const char *key)
     h = hashstr(key, hash->max_size);
 
     for (i = 0; i < hash->buckets[h].length; ++i) {
-        darray_at(&hash->buckets[h], (void **)&iter, i);
+        darray_at(&hash->buckets[h], i, (void **)&iter);
         if (!strcmp(iter->key, key)) {
             return 1;
         }
@@ -524,7 +571,7 @@ void hash_remove(struct hash *hash, const char *key, free_func *freer)
     h = hashstr(key, hash->max_size);
 
     for (i = 0; i < hash->buckets[h].length; ++i) {
-        darray_at(&hash->buckets[h], (void **)&iter, i);
+        darray_at(&hash->buckets[h], i, (void **)&iter);
         if (!strcmp(iter->key, key)) {
             darray_remove(&hash->buckets[h], freer, i);
             break;
@@ -542,7 +589,7 @@ void hash_at(struct hash *hash, const char *key, void **mem)
     h = hashstr(key, hash->max_size);
 
     for (i = 0; i < hash->buckets[h].length; ++i) {
-        darray_at(&hash->buckets[h], (void **)&iter, i);
+        darray_at(&hash->buckets[h], i, (void **)&iter);
         if (!strcmp(iter->key, key)) {
             *mem = iter->mem;
             return;
@@ -561,7 +608,7 @@ void hash_keys(struct hash *hash, struct darray *arr)
 
     for (i = 0; i < hash->max_size; ++i) {
         for (j = 0; j < hash->buckets[i].length; ++j) {
-            darray_at(&hash->buckets[i], (void **)&iter, j);
+            darray_at(&hash->buckets[i], j, (void **)&iter);
             darray_push_back(arr, iter->key);
         }
     }
@@ -576,7 +623,7 @@ void hash_values(struct hash *hash, struct darray *arr)
 
     for (i = 0; i < hash->max_size; ++i) {
         for (j = 0; j < hash->buckets[i].length; ++j) {
-            darray_at(&hash->buckets[i], (void **)&iter, j);
+            darray_at(&hash->buckets[i], j, (void **)&iter);
             darray_push_back(arr, iter->mem);
         }
     }
